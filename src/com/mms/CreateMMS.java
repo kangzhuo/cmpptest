@@ -1,6 +1,5 @@
 package com.mms;
 
-import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -44,8 +43,6 @@ public class CreateMMS {
             } else if (entry.getKey().contains("VIDEO")) {
                 writeVideo(entry.getKey().replace("VIDEO|",""), entry.getValue());
             }
-
-
             System.out.println("Key = " + entry.getKey() + ", Value = " + entry.getValue());
 
         }
@@ -89,10 +86,9 @@ public class CreateMMS {
                 (byte)0x00, (byte)0xC0, (byte)0x6D, (byte)0x6D, (byte)0x73, (byte)0x2E, (byte)0x73, (byte)0x6D,
                 (byte)0x69, (byte)0x6C, (byte)0x00};
         g_fos.write((byte)0x1B); //27
-        g_fos.write(encodeUintvar(p_strXml.getBytes().length + 2));
+        g_fos.write(encodeUintvar(p_strXml.getBytes().length + 1));
         g_fos.write(xmlHead);
         g_fos.write(p_strXml.getBytes());
-        g_fos.write((byte)0x0A);
         g_fos.write((byte)0x0A);
     }
 
@@ -110,7 +106,7 @@ public class CreateMMS {
         g_fos.write(xmlHead_2);
         g_fos.write(p_strName.getBytes());
         g_fos.write(xmlHead_3);
-        g_fos.write(p_strText.getBytes("GBK"));
+        g_fos.write(p_strText.getBytes());
     }
 
     private void writeImage(String p_strName, String p_strImage) throws IOException{
@@ -208,7 +204,11 @@ public class CreateMMS {
                         "</par>" +
                     "</body>" +
                 "</smil>";
-            createMMS.create ("/Users/kangbo/work/cmpptest/kbtest.mms", l_strXml, new HashMap<String, String>(), null, null);
+            Map<String,String> l_mapParam = new HashMap<>();
+            l_mapParam.put("TEXT|t04.txt", "测试123");
+            l_mapParam.put("VIDEO|12.mp4", "/Users/kangbo/Downloads/xinwen.mp4");
+
+            createMMS.create ("/Users/kangbo/work/cmpptest/kbtest.mms", l_strXml, l_mapParam, null, null);
         } catch (Exception e) {
             System.out.println(e.getMessage());
         }
