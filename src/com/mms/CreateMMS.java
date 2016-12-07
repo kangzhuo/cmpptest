@@ -205,8 +205,8 @@ public class CreateMMS {
                     "</body>" +
                 "</smil>";
             Map<String,String> l_mapParam = new HashMap<>();
-            l_mapParam.put("TEXT|t04.txt", "测试123");
-            l_mapParam.put("VIDEO|12.mp4", "/Users/kangbo/Downloads/xinwen.mp4");
+            l_mapParam.put("TEXT|t04.txt", "西溪诚园");
+            l_mapParam.put("VIDEO|12.mp4", "/Users/kangbo/Downloads/xxcy4.mp4");
 
             createMMS.create ("/Users/kangbo/work/cmpptest/kbtest.mms", l_strXml, l_mapParam, null, null);
         } catch (Exception e) {
