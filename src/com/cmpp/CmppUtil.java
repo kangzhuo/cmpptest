@@ -20,8 +20,6 @@ public class CmppUtil {
     /**
      * 对字符串md5加密
      *
-     * @param str
-     * @return
      */
     public static String getMD5(String str) throws Exception{
         // 生成一个MD5加密计算摘要
@@ -33,7 +31,7 @@ public class CmppUtil {
         return new BigInteger(1, md.digest()).toString(16);
     }
 
-    public static byte[] stringToByte(String p_strSrc, int p_iLength) {
+    public static byte[] str2Byte(String p_strSrc, int p_iLength) {
         if (p_strSrc.length() > p_iLength) {
             return p_strSrc.substring(0, p_iLength).getBytes();
         } else if (p_strSrc.length() < p_iLength) {

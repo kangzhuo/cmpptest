@@ -3,6 +3,7 @@ package com.cmpp;
 import java.io.ByteArrayOutputStream;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -72,39 +73,104 @@ public class CmppPackData {
         return bos.toByteArray();
     }
 
-    public byte[] makeCmppSubmitReq(String p_strDoneCode, String p_strTel, int p_iType) {
+    public byte[] makeCmppSubmitReq(int p_iSeq, String p_strTel, int p_iMsgType, String p_strMsg) throws Exception {
         byte[] msgId, pkTotal, pkNumber, registeredDelivery, msgLevel, serviceId, feeUserType,
                 feeTerminalId, tpId, tpUdhi, msgFmt, msgSrc, feeType, feeCode, validTime, atTime, srcId,
-                destUsrTl, destTerminalId, msgLength, msgContent, reserve;
-        msgId = new byte[8];                        //信息标识，由SP侧短信网关本身产生，本处填空。
+                destUsrTl, destTerminalId, msgLength, msgContent, reserve, head;
+        int l_iMsgLength = 0;
+
+        if (1 == p_iMsgType) { //普通短信
+            msgContent = p_strMsg.getBytes("GBK");
+        } else if (2 == p_iMsgType) { //超级短信
+            msgContent = makeMMSBody(p_strTel, p_strMsg);
+        } else if (3 == p_iMsgType) { //闪信
+            msgContent = makeDCSBody(p_strTel, p_strMsg);
+        } else {
+            return null;
+        }
+
+        l_iMsgLength = msgContent.length;
+        if (l_iMsgLength >= 140) //超过单条短信限制
+            return null;
+        msgLength = new byte[] {(byte)l_iMsgLength};
+
+        msgId = new byte[] {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00}; //信息标识，由SP侧短信网关本身产生，本处填空。
         pkTotal = new byte[] {0x01};                //相同Msg_Id的信息总条数，从1开始
         pkNumber = new byte[] {0x01};               //相同Msg_Id的信息序号，从1开始
         registeredDelivery = new byte[] {config.registeredDelivery};    //是否要求返回状态确认报告：0：不需要 1：需要 2：产生SMC话
         msgLevel = new byte[] {config.msgLevel};    //信息级别
-        serviceId = CmppUtil.stringToByte(p_strDoneCode, 10);
+        serviceId = CmppUtil.str2Byte("xsms", 10);
         feeUserType = new byte[] {config.feeUserType};
-        feeTerminalId = CmppUtil.stringToByte(p_strTel, 21);
+        feeTerminalId = CmppUtil.str2Byte(p_strTel, 21);
         tpId = new byte[] {0x00};
-        tpUdhi = p_iType == 1 ? new byte[] {0x00} : new byte[] {0x01};
-        msgFmt = p_iType == 1 ? new byte[] {0x0f} : (p_iType == 2 ? new byte[] {0x04} : new byte[] {0x18});
+        tpUdhi = 1 == p_iMsgType ? new byte[] {0x00} : new byte[] {0x01};
+        msgFmt = 1 == p_iMsgType ? new byte[] {0x0f} : (p_iMsgType == 2 ? new byte[] {0x04} : new byte[] {0x18});
         msgSrc = config.spId.getBytes();
         feeType = config.feeType.getBytes();
         feeCode = config.feeCode.getBytes();
         validTime = config.validTime;
         atTime = config.atTime;
-        srcId =
+        srcId = config.srcId;
+        destUsrTl = new byte[] {0x01};
+        destTerminalId = CmppUtil.str2Byte(p_strTel, 21);
+        reserve = config.reserve;
 
+        head = makeHead(CmppPackData.CMPP_CONNECT, 147 + l_iMsgLength, CmppUtil.int2byte(p_iSeq));
+
+        ByteArrayOutputStream bos = new ByteArrayOutputStream();
+        bos.write(head);
+        bos.write(msgId);
+        bos.write(pkTotal);
+        bos.write(pkNumber);
+        bos.write(registeredDelivery);
+        bos.write(msgLevel);
+        bos.write(serviceId);
+        bos.write(feeUserType);
+        bos.write(feeTerminalId);
+        bos.write(tpId);
+        bos.write(tpUdhi);
+        bos.write(msgFmt);
+        bos.write(msgSrc);
+        bos.write(feeType);
+        bos.write(feeCode);
+        bos.write(validTime);
+        bos.write(atTime);
+        bos.write(srcId);
+        bos.write(destUsrTl);
+        bos.write(destTerminalId);
+        bos.write(msgLength);
+        bos.write(msgContent);
+        bos.write(reserve);
+        bos.flush();
+
+        return bos.toByteArray();
     }
 
     public byte[] makeCmppActiveTest() {
+        return makeHead(CmppPackData.CMPP_ACTIVE_TEST, 0, new byte[] {(byte)0x00, (byte)0x00, (byte)0x00, (byte)0x02});
+    }
 
+    public Map<String,String> readCmppResp(List<Byte> p_respDatas) {
+        return null;
     }
 
     public Map<String,String> readCmppConnectResp() {
-
+        return null;
     }
 
     public Map<String,String> readCmppSubmitResp() {
+        return null;
+    }
+
+    public Map<String,String> readCmppActiveTestResp() {
+        return null;
+    }
+
+    private byte[] makeMMSBody(String p_strTel, String p_strMsg) {
+        byte[] msgId, pkTotal, pkNumber;
+    }
+
+    private byte[] makeDCSBody(String p_strTel, String p_strMsg) {
 
     }
 }

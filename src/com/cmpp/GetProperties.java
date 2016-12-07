@@ -26,10 +26,10 @@ public class GetProperties {
     public byte feeUserType = (byte)0x03;
     public String feeType = "01";
     public String feeCode = "000000";
-    public byte[] validTime = new byte[17];
-    public byte[] atTime = new byte[17];
+    public byte[] validTime = {(byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00};
+    public byte[] atTime = {(byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00};
     public byte[] srcId = {(byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x31,(byte)0x31, (byte)0x30, (byte)0x36, (byte)0x35, (byte)0x37, (byte)0x35, (byte)0x32, (byte)0x36, (byte)0x31, (byte)0x31, (byte)0x30, (byte)0x37};
-    public byte[] reserve = new byte[8];
+    public byte[] reserve = {(byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00};
 
     //0000005eh: 31 30 36 35 37 35 32 36 31 31 30 37             ; ............
     //self.Timestamp=0
@@ -75,12 +75,14 @@ public class GetProperties {
                     feeType = prop.getProperty("feeType");
                 if(prop.containsKey("feeCode"))
                     feeCode = prop.getProperty("feeCode");
-                if(prop.containsKey("validTime"))
-                    validTime = prop.getProperty("validTime").getBytes();
-                if(prop.containsKey("AtTime"))
-                    atTime = prop.getProperty("AtTime").getBytes();
-                if(prop.containsKey("reserve"))
-                    reserve = prop.getProperty("reserve").getBytes();
+                //if(prop.containsKey("validTime"))
+                //    validTime = prop.getProperty("validTime").getBytes();
+                //if(prop.containsKey("AtTime"))
+                //    atTime = prop.getProperty("AtTime").getBytes();
+                if(prop.containsKey("srcId"))
+                    srcId = CmppUtil.str2Byte(prop.getProperty("srcId"), 21);
+                //if(prop.containsKey("reserve"))
+                //    reserve = prop.getProperty("reserve").getBytes();
                 in.close();
 
                 /* //保存属性到b.properties文件

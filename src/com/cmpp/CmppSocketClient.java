@@ -7,6 +7,7 @@ import java.net.Socket;
 import java.net.SocketTimeoutException;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Created by kangbo on 2016/11/29.
@@ -148,24 +149,28 @@ public class CmppSocketClient {
                     //////////////////////////////////////////////
                     //处理待补充
                     CmppUtil.printHexString(l_rets.toArray());
+                    CmppPackData cmppPackData = new CmppPackData();
+                    cmppPackData.readCmppResp(l_rets);
                     //////////////////////////////////////////////
 
                     sleep(1000);
                 } catch (InterruptedException e) {
                     g_isInterrupted = true;
                 } catch (SocketTimeoutException e) {
-                    //到达重试次数后返回报错
-                    if (config.recvRetry == g_iRetry++) {
-                        break;
-                    } else {
-                        //超过1秒没有信息则发送心跳
-                        try {
-                            OutputStream l_out = g_sockets[g_iNum].getOutputStream();
-                            CmppPackData cmppPackData = new CmppPackData();
-                            l_out.write(cmppPackData.makeCmppActiveTest());
-                        } catch (IOException e1) {
-                            System.out.println(e1.getMessage());
+                    if (0 == checkAndsetUsed(g_iNum)) { //先占用
+                        if (config.recvRetry >= g_iRetry++) { //到达重试次数后返回报错
+                            destroyConnect(g_iNum);
                             break;
+                        } else {
+                            //超过1秒没有信息则发送心跳
+                            try {
+                                OutputStream l_out = g_sockets[g_iNum].getOutputStream();
+                                CmppPackData cmppPackData = new CmppPackData();
+                                l_out.write(cmppPackData.makeCmppActiveTest());
+                            } catch (IOException e1) {
+                                System.out.println(e1.getMessage());
+                                break;
+                            }
                         }
                     }
                 } catch (Exception e) {
@@ -174,6 +179,4 @@ public class CmppSocketClient {
             }
         }
     }
-
-
 }
