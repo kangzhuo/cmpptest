@@ -1,7 +1,6 @@
 package com.cmpp;
 
 import java.io.BufferedInputStream;
-import java.io.IOError;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.net.Socket;
@@ -30,31 +29,37 @@ public class CmppSocketClient {
         }
     }
 
-    private synchronized static void setUsed(int p_iNum, int p_iValue) {
-        g_iUsed[p_iNum] = p_iValue;
+    private static void unSetUsed(int p_iNum) {
+        g_iUsed[p_iNum] = 0;
     }
 
     private synchronized static int getSocket() {
         for (int i = 0; i < g_iMaxSocket; i++) {
-            if (0 == checkAndsetUsed(i) && 1 == g_iValids[i]) {
-                return i;
-            } else if (0 == g_iValids[i]) {
-                //建立新链接
-                g_sockets[i] = createConnect();
-                if (g_sockets[i] != null) {
-                    g_iValids[i] = 1;
-                    //启动守护线程并保存
-                    MyRespThread myRespThread = new MyRespThread(g_sockets[i]);
-                    myRespThread.start();
-                    g_myThread[i] = myRespThread;
-                    //更新为使用状态返回
-                    setUsed(i, 1);
+            if (0 == checkAndsetUsed(i)) {
+                if (1 == g_iValids[i]) {
                     return i;
+                } else if (0 == g_iValids[i]) {
+                    //建立新链接
+                    g_sockets[i] = createConnect();
+                    if (g_sockets[i] != null) {
+                        g_iValids[i] = 1;
+                        //启动守护线程并保存
+                        MyRespThread myRespThread = new MyRespThread(i);
+                        myRespThread.start();
+                        g_myThread[i] = myRespThread;
+                        //更新为使用状态返回
+                        //setUsed(i, 1); 已经占用了
+                        return i;
+                    }
                 }
             }
         }
 
         return -1;
+    }
+
+    private static void retSocket(int p_iUsed) {
+        unSetUsed(p_iUsed);
     }
 
     private synchronized static Socket createConnect() {
@@ -72,8 +77,22 @@ public class CmppSocketClient {
         }
     }
 
-    private synchronized static void retSocket(int p_iUsed) {
-        setUsed(p_iUsed, 0);
+    private static int destroyConnect(int p_iNum) {
+        //销毁守护线程
+        g_myThread[p_iNum].g_isInterrupted = true;
+        g_myThread[p_iNum].interrupt();
+        //socket失效
+        g_iValids[p_iNum] = 0;
+        //socket销毁
+        try {
+            g_sockets[p_iNum].close();
+        } catch (Exception e) {
+            System.out.println(e.getMessage());
+        }
+        //socket置为未占用
+        retSocket(p_iNum);
+
+        return 0;
     }
 
     public static int sendAndRetSocket(byte[] p_data) {
@@ -92,26 +111,13 @@ public class CmppSocketClient {
                 return -1;
             }
         }
-
+        //写数据
         try {
             OutputStream l_out = g_sockets[l_iUsed].getOutputStream();
             l_out.write(p_data);
-        } catch (Exception e) {
+        } catch (IOException e) {
             System.out.println(e.getMessage());
-            //更改状态
-            retSocket(l_iUsed);
-            //注销守护线程
-            g_myThread[l_iUsed].g_isInterrupted = true;
-            g_myThread[l_iUsed].interrupt();
-            //重置此链接
-            g_iValids[l_iUsed] = 0;
-            //销毁socket
-            try {
-                g_sockets[l_iUsed].close();
-            } catch (IOException e1) {
-                System.out.println(e.getMessage());
-            }
-
+            destroyConnect(l_iUsed);
             return -1;
         }
 
@@ -141,17 +147,26 @@ public class CmppSocketClient {
                     }
                     //////////////////////////////////////////////
                     //处理待补充
-                    printHexString(l_rets.toArray());
+                    CmppUtil.printHexString(l_rets.toArray());
                     //////////////////////////////////////////////
 
-                    sleep(100);
+                    sleep(1000);
                 } catch (InterruptedException e) {
                     g_isInterrupted = true;
                 } catch (SocketTimeoutException e) {
                     //到达重试次数后返回报错
                     if (config.recvRetry == g_iRetry++) {
-                        checkAndsetUsed(g_iNum);
-                        g_iValids[g_iNum] = 0;
+                        break;
+                    } else {
+                        //超过1秒没有信息则发送心跳
+                        try {
+                            OutputStream l_out = g_sockets[g_iNum].getOutputStream();
+                            CmppPackData cmppPackData = new CmppPackData();
+                            l_out.write(cmppPackData.makeCmppActiveTest());
+                        } catch (IOException e1) {
+                            System.out.println(e1.getMessage());
+                            break;
+                        }
                     }
                 } catch (Exception e) {
                     System.out.println(e.getMessage());
@@ -160,15 +175,5 @@ public class CmppSocketClient {
         }
     }
 
-    private static void printHexString(Object[] p_bytes)
-    {
-        for (Object l_byte : p_bytes) {
-            String hex = Integer.toHexString((byte)l_byte & 0xFF);
-            if (hex.length() == 1)
-            {
-                hex = '0' + hex;
-            }
-            System.out.print(hex.toUpperCase());
-        }
-    }
+
 }

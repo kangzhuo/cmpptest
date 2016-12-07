@@ -1,11 +1,7 @@
 package com.cmpp;
 
-import java.io.ByteArrayOutputStream;
 import java.math.BigInteger;
 import java.security.MessageDigest;
-import java.text.SimpleDateFormat;
-import java.util.Date;
-import java.util.Map;
 
 /**
  * Created by kangbo on 2016/11/29.
@@ -51,5 +47,17 @@ public class CmppUtil {
             return l_rets;
         }
         return p_strSrc.getBytes();
+    }
+
+    public static void printHexString(Object[] p_bytes)
+    {
+        for (Object l_byte : p_bytes) {
+            String hex = Integer.toHexString((byte)l_byte & 0xFF);
+            if (hex.length() == 1)
+            {
+                hex = '0' + hex;
+            }
+            System.out.print(hex.toUpperCase());
+        }
     }
 }
