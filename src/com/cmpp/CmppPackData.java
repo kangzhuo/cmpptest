@@ -1,6 +1,7 @@
 package com.cmpp;
 
 import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.HashMap;
@@ -11,42 +12,37 @@ import java.util.Map;
  * Created by kangbo on 2016/11/29.
  */
 public class CmppPackData {
-    GetProperties config = new GetProperties();
+    private static GetProperties config = new GetProperties();
     public static final int CMPP_CONNECT = 1;
     public static final int CMPP_SUBMIT = 4;
     public static final int CMPP_QUERY = 6;
     public static final int CMPP_ACTIVE_TEST = 8;
 
-    private byte[] makeHead(int p_iType, int p_iBodyLength, byte[] p_strDoneCode) {
-        try {
-            byte[] totalLength, commandId, seqId;
+    private byte[] makeHead(int p_iType, int p_iBodyLength, byte[] p_strDoneCode) throws IOException {
+        byte[] totalLength, commandId, seqId;
 
-            if (CmppPackData.CMPP_CONNECT == p_iType) {
-                totalLength = CmppUtil.int2byte(12 + 27);
-                commandId = CmppUtil.int2byte(CmppPackData.CMPP_CONNECT);
-                seqId = p_strDoneCode;
-            } else if (CmppPackData.CMPP_SUBMIT == p_iType) {
-                totalLength = CmppUtil.int2byte(12 + p_iBodyLength);
-                commandId = CmppUtil.int2byte(CmppPackData.CMPP_SUBMIT);
-                seqId = p_strDoneCode;
-            } else if (CmppPackData.CMPP_ACTIVE_TEST == p_iType){
-                totalLength = CmppUtil.int2byte(12);
-                commandId = CmppUtil.int2byte(CmppPackData.CMPP_SUBMIT);
-                seqId = p_strDoneCode;
-            } else {
-                return new byte[] {};
-            }
-
-            ByteArrayOutputStream bos = new ByteArrayOutputStream();
-            bos.write(totalLength);
-            bos.write(commandId);
-            bos.write(seqId);
-            bos.flush();
-            return bos.toByteArray();
-        } catch (Exception e) {
-            System.out.println(e.getMessage());
+        if (CmppPackData.CMPP_CONNECT == p_iType) {
+            totalLength = CmppUtil.int2byte(12 + 27);
+            commandId = CmppUtil.int2byte(CmppPackData.CMPP_CONNECT);
+            seqId = p_strDoneCode;
+        } else if (CmppPackData.CMPP_SUBMIT == p_iType) {
+            totalLength = CmppUtil.int2byte(12 + p_iBodyLength);
+            commandId = CmppUtil.int2byte(CmppPackData.CMPP_SUBMIT);
+            seqId = p_strDoneCode;
+        } else if (CmppPackData.CMPP_ACTIVE_TEST == p_iType){
+            totalLength = CmppUtil.int2byte(12);
+            commandId = CmppUtil.int2byte(CmppPackData.CMPP_SUBMIT);
+            seqId = p_strDoneCode;
+        } else {
             return new byte[] {};
         }
+
+        ByteArrayOutputStream bos = new ByteArrayOutputStream();
+        bos.write(totalLength);
+        bos.write(commandId);
+        bos.write(seqId);
+        bos.flush();
+        return bos.toByteArray();
     }
 
     public byte[] makeCmppConnectReq() throws Exception {
@@ -58,9 +54,9 @@ public class CmppPackData {
         byte[] l_bytes = {(byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00};
 
         byte[] sourceAddr, authenticatorSource, version, timestamp, head;
-        sourceAddr = config.spId.getBytes();
-        authenticatorSource = CmppUtil.getMD5(config.spId + new String(l_bytes) + config.pwd + l_strTime).getBytes();
-        version = new byte[]{config.version};
+        sourceAddr = CmppPackData.config.spId.getBytes();
+        authenticatorSource = CmppUtil.getMD5(CmppPackData.config.spId + new String(l_bytes) + CmppPackData.config.pwd + l_strTime).getBytes();
+        version = new byte[]{CmppPackData.config.version};
         timestamp = l_strTime.getBytes();
 
         head = makeHead(CmppPackData.CMPP_CONNECT, 27, new byte[] {(byte)0x00, (byte)0x00, (byte)0x00, (byte)0x01});
@@ -75,7 +71,7 @@ public class CmppPackData {
         return bos.toByteArray();
     }
 
-    public byte[] makeCmppSubmitReq(int p_iSeq, String p_strTel, int p_iMsgType, String p_strMsg) throws Exception {
+    public byte[] makeCmppSubmitReq(int p_iSeq, String p_strTel, int p_iMsgType, String p_strMsg) throws IOException {
         byte[] msgId, pkTotal, pkNumber, registeredDelivery, msgLevel, serviceId, feeUserType,
                 feeTerminalId, tpId, tpUdhi, msgFmt, msgSrc, feeType, feeCode, validTime, atTime, srcId,
                 destUsrTl, destTerminalId, msgLength, msgContent, reserve, head;
@@ -99,23 +95,23 @@ public class CmppPackData {
         msgId = new byte[] {(byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00}; //信息标识，由SP侧短信网关本身产生，本处填空。
         pkTotal = new byte[] {(byte)0x01};                //相同Msg_Id的信息总条数，从1开始
         pkNumber = new byte[] {(byte)0x01};               //相同Msg_Id的信息序号，从1开始
-        registeredDelivery = new byte[] {config.registeredDelivery};    //是否要求返回状态确认报告：0：不需要 1：需要 2：产生SMC话
-        msgLevel = new byte[] {config.msgLevel};    //信息级别
+        registeredDelivery = new byte[] {CmppPackData.config.registeredDelivery};    //是否要求返回状态确认报告：0：不需要 1：需要 2：产生SMC话
+        msgLevel = new byte[] {CmppPackData.config.msgLevel};    //信息级别
         serviceId = CmppUtil.str2Byte("xsms", 10);
-        feeUserType = new byte[] {config.feeUserType};
+        feeUserType = new byte[] {CmppPackData.config.feeUserType};
         feeTerminalId = CmppUtil.str2Byte(p_strTel, 21);
         tpId = new byte[] {(byte)0x00};
         tpUdhi = 1 == p_iMsgType ? new byte[] {(byte)0x00} : new byte[] {(byte)0x01};
         msgFmt = 1 == p_iMsgType ? new byte[] {(byte)0x0f} : (p_iMsgType == 2 ? new byte[] {(byte)0x04} : new byte[] {(byte)0x18});
-        msgSrc = config.spId.getBytes();
-        feeType = config.feeType.getBytes();
-        feeCode = config.feeCode.getBytes();
-        validTime = config.validTime;
-        atTime = config.atTime;
-        srcId = CmppUtil.str2Byte(config.srcId, 21);
+        msgSrc = CmppPackData.config.spId.getBytes();
+        feeType = CmppPackData.config.feeType.getBytes();
+        feeCode = CmppPackData.config.feeCode.getBytes();
+        validTime = CmppPackData.config.validTime;
+        atTime = CmppPackData.config.atTime;
+        srcId = CmppUtil.str2Byte(CmppPackData.config.srcId, 21);
         destUsrTl = new byte[] {(byte)0x01};
         destTerminalId = CmppUtil.str2Byte(p_strTel, 21);
-        reserve = config.reserve;
+        reserve = CmppPackData.config.reserve;
 
         head = makeHead(CmppPackData.CMPP_CONNECT, 147 + l_iMsgLength, CmppUtil.int2byte(p_iSeq));
 
@@ -148,7 +144,7 @@ public class CmppPackData {
         return bos.toByteArray();
     }
 
-    public byte[] makeCmppQueryReq() throws Exception {
+    public byte[] makeCmppQueryReq() throws IOException {
 
         Date l_nowDate = new Date();
         SimpleDateFormat df = new SimpleDateFormat("YYYYMMDD");
@@ -172,7 +168,7 @@ public class CmppPackData {
         return bos.toByteArray();
     }
 
-    public byte[] makeCmppActiveTest() {
+    public byte[] makeCmppActiveTest() throws IOException {
         return makeHead(CmppPackData.CMPP_ACTIVE_TEST, 0, new byte[] {(byte)0x00, (byte)0x00, (byte)0x00, (byte)0x03});
     }
 
@@ -306,7 +302,7 @@ public class CmppPackData {
         return l_mapRet;
     }
 
-    private byte[] makeMMSBody(String p_strTel, String p_strMsg) throws Exception {
+    private byte[] makeMMSBody(String p_strTel, String p_strMsg) throws IOException {
         String l_strSendMsg = p_strMsg.contains("?") ? (p_strMsg + "&abc=" + p_strTel) : (p_strMsg + "?abc=" + p_strTel);
 
         byte wdp_HeaderLength = (byte)0x06;
@@ -331,7 +327,7 @@ public class CmppPackData {
         byte[] x_mms_transaction_id = new byte[] {(byte)0x98, (byte)0x33, (byte)0x36, (byte)0x35, (byte)0x38, (byte)0x32, (byte)0x34, (byte)0x00};
         byte[] x_mms_mms_version = new byte[] {(byte)0x8D, (byte)0x90};
         byte[] x_mms_from = new byte[] {(byte)0x89, (byte)0x17, (byte)0x80};
-        byte[] x_mms_src = CmppUtil.str2Byte(config.srcId, config.srcId.length());
+        byte[] x_mms_src = CmppUtil.str2Byte(CmppPackData.config.srcId, CmppPackData.config.srcId.length());
         byte[] x_mms_type = new byte[] {(byte)0x2f, (byte)0x54, (byte)0x59, (byte)0x50, (byte)0x45, (byte)0x3d, (byte)0x50, (byte)0x4c, (byte)0x4d, (byte)0x4e, (byte)0x00};
         byte[] x_mms_message_class = new byte[] {(byte)0x8A, (byte)0x80};
         byte[] x_mms_message_size = new byte[] {(byte)0x8E, (byte)0x03, (byte)0x01, (byte)0x6e, (byte)0xad};

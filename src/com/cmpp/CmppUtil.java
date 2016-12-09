@@ -1,5 +1,7 @@
 package com.cmpp;
 
+import org.apache.log4j.Logger;
+
 import java.math.BigInteger;
 import java.security.MessageDigest;
 
@@ -7,6 +9,8 @@ import java.security.MessageDigest;
  * Created by kangbo on 2016/11/29.
  */
 public class CmppUtil {
+    private static Logger logger = Logger.getLogger(CmppUtil.class);
+
     public static byte[] int2byte(int p_iRes) {
         byte[] l_iTarget = new byte[4];
 
@@ -61,5 +65,19 @@ public class CmppUtil {
             }
             System.out.print(hex.toUpperCase());
         }
+        System.out.println();
+    }
+
+    public static void printHexStringForByte(byte[] p_bytes)
+    {
+        for (byte l_byte : p_bytes) {
+            String hex = Integer.toHexString(l_byte & 0xFF);
+            if (hex.length() == 1)
+            {
+                hex = '0' + hex;
+            }
+            System.out.print(hex.toUpperCase());
+        }
+        System.out.println();
     }
 }

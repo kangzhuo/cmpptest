@@ -54,9 +54,11 @@ public class GetProperties {
                 if(prop.containsKey("maxSocket"))
                     maxSocket = Integer.parseInt(prop.getProperty("maxSocket"));
                 if(prop.containsKey("timeOut"))
-                    maxSocket = Integer.parseInt(prop.getProperty("timeOut"));
+                    timeOut = Integer.parseInt(prop.getProperty("timeOut"));
                 if(prop.containsKey("sendRetry"))
-                    maxSocket = Integer.parseInt(prop.getProperty("sendRetry"));
+                    sendRetry = Integer.parseInt(prop.getProperty("sendRetry"));
+                if(prop.containsKey("recvRetry"))
+                    recvRetry = Integer.parseInt(prop.getProperty("recvRetry"));
                 if(prop.containsKey("sourceAddr"))
                     sourceAddr = prop.getProperty("sourceAddr");
                 if(prop.containsKey("spId"))
