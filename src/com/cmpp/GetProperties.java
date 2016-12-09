@@ -13,7 +13,7 @@ public class GetProperties {
     public String host = "211.140.12.45";
     public String port = "7890";
     public int maxSocket = 2;
-    public int timeOut = 1000;
+    public int timeOut = 1;
     public int sendRetry = 3;
     public int recvRetry = 10;
 
@@ -28,7 +28,7 @@ public class GetProperties {
     public String feeCode = "000000";
     public byte[] validTime = {(byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00};
     public byte[] atTime = {(byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00};
-    public byte[] srcId = {(byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x31,(byte)0x31, (byte)0x30, (byte)0x36, (byte)0x35, (byte)0x37, (byte)0x35, (byte)0x32, (byte)0x36, (byte)0x31, (byte)0x31, (byte)0x30, (byte)0x37};
+    public String srcId = "106575261107";
     public byte[] reserve = {(byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00};
 
     //0000005eh: 31 30 36 35 37 35 32 36 31 31 30 37             ; ............
@@ -80,7 +80,7 @@ public class GetProperties {
                 //if(prop.containsKey("AtTime"))
                 //    atTime = prop.getProperty("AtTime").getBytes();
                 if(prop.containsKey("srcId"))
-                    srcId = CmppUtil.str2Byte(prop.getProperty("srcId"), 21);
+                    srcId = prop.getProperty("srcId");
                 //if(prop.containsKey("reserve"))
                 //    reserve = prop.getProperty("reserve").getBytes();
                 in.close();

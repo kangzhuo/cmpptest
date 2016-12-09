@@ -17,6 +17,10 @@ public class CmppUtil {
         return l_iTarget;
     }
 
+    public static int byte2int(byte p_b1, byte p_b2, byte p_b3, byte p_b4) {
+        return (p_b4 & 0xFF) | ((p_b3 & 0xFF) << 8) | ((p_b2 & 0xFF) << 16) | ((p_b1 & 0xFF) << 24);
+    }
+
     /**
      * 对字符串md5加密
      *

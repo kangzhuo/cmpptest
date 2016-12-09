@@ -7,7 +7,7 @@ import java.net.Socket;
 import java.net.SocketTimeoutException;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.Map;
 
 /**
  * Created by kangbo on 2016/11/29.
@@ -71,6 +71,23 @@ public class CmppSocketClient {
             OutputStream l_out = l_socket.getOutputStream();
             CmppPackData cmppPackData = new CmppPackData();
             l_out.write(cmppPackData.makeCmppConnectReq());
+
+            l_socket.setSoTimeout(config.timeOut*1000);
+            BufferedInputStream l_in = new BufferedInputStream(l_socket.getInputStream());
+            int l_iRet;
+            List<Byte> l_rets = new LinkedList<>();
+            while ((l_iRet = l_in.read()) != -1) {
+                l_rets.add((byte) l_iRet);
+            }
+            Map<String,String> l_mapResp = cmppPackData.readCmppConnectResp(l_rets);
+            if (l_mapResp == null || !l_mapResp.containsKey("status")) {
+                System.out.println("建立链接失败，返回数据异常");
+                return null;
+            } else if (!l_mapResp.get("status").equals("0")) {
+                System.out.println("建立链接失败【" + l_mapResp.get("status") + "】，最高支持版本【" + l_mapResp.get("version") + "】");
+                return null;
+            }
+
             return l_socket;
         } catch (Exception e) {
             System.out.println(e.getMessage());
@@ -150,7 +167,7 @@ public class CmppSocketClient {
                     //处理待补充
                     CmppUtil.printHexString(l_rets.toArray());
                     CmppPackData cmppPackData = new CmppPackData();
-                    cmppPackData.readCmppResp(l_rets);
+                    cmppPackData.readCmppSubmitResp(l_rets);
                     //////////////////////////////////////////////
 
                     sleep(1000);
