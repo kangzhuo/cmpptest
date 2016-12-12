@@ -71,6 +71,9 @@ public class CmppSocketClient {
                         //setUsed(i, 1); 已经占用了
                         logger.info("分配链接编号【" + i + "】。");
                         return i;
+                    } else {
+                        logger.error("建立链接失败，释放占用！！！");
+                        unSetUsed(i);
                     }
                 }
             }
@@ -96,7 +99,7 @@ public class CmppSocketClient {
             CmppUtil.printHexStringForByte(cmppPackData.makeCmppConnectReq());
             l_out.write(cmppPackData.makeCmppConnectReq());
 
-            l_socket.setSoTimeout(config.timeOut*1000);
+            l_socket.setSoTimeout(3 * 1000);
             BufferedInputStream l_in = new BufferedInputStream(l_socket.getInputStream());
             int l_iRet;
             List<Byte> l_rets = new LinkedList<>();
@@ -193,7 +196,7 @@ public class CmppSocketClient {
             while (!g_isInterrupted) {
                 try {
                     logger.info("开始读入数据。");
-                    g_sockets[g_iNum].setSoTimeout(config.timeOut);
+                    g_sockets[g_iNum].setSoTimeout(config.timeOut * 1000);
                     BufferedInputStream l_in = new BufferedInputStream(g_sockets[g_iNum].getInputStream());
                     int l_iRet;
                     List<Byte> l_rets = new LinkedList<>();

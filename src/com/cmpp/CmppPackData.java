@@ -50,16 +50,16 @@ public class CmppPackData {
         Date l_nowDate = new Date();
         SimpleDateFormat df = new SimpleDateFormat("MMddHHmmss");
         String l_strTime = df.format(l_nowDate);
+        l_strTime = "1212112900";
 
         byte[] l_bytes = {(byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00};
 
-        byte[] sourceAddr, authenticatorSource, version, timestamp, head;
-        sourceAddr = CmppPackData.config.spId.getBytes();
-        authenticatorSource = CmppUtil.getMD5(CmppPackData.config.spId + new String(l_bytes) + CmppPackData.config.pwd + l_strTime).getBytes();
-        version = new byte[]{CmppPackData.config.version};
-        timestamp = l_strTime.getBytes();
+        byte[] sourceAddr = CmppPackData.config.sourceAddr.getBytes();
+        byte[] authenticatorSource = CmppUtil.MD5(CmppPackData.config.sourceAddr + new String(l_bytes) + CmppPackData.config.pwd + l_strTime);
+        byte[] version = new byte[]{CmppPackData.config.version};
+        byte[] timestamp = CmppUtil.int2byte(Integer.parseInt(l_strTime));
 
-        head = makeHead(CmppPackData.CMPP_CONNECT, 27, new byte[] {(byte)0x00, (byte)0x00, (byte)0x00, (byte)0x01});
+        byte[] head = makeHead(CmppPackData.CMPP_CONNECT, 27, new byte[] {(byte)0x00, (byte)0x00, (byte)0x00, (byte)0x01});
 
         ByteArrayOutputStream bos = new ByteArrayOutputStream();
         bos.write(head);

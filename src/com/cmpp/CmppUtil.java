@@ -14,10 +14,10 @@ public class CmppUtil {
     public static byte[] int2byte(int p_iRes) {
         byte[] l_iTarget = new byte[4];
 
-        l_iTarget[0] = (byte) (p_iRes & 0xff);// 最低位
-        l_iTarget[1] = (byte) ((p_iRes >> 8) & 0xff);// 次低位
-        l_iTarget[2] = (byte) ((p_iRes >> 16) & 0xff);// 次高位
-        l_iTarget[3] = (byte) (p_iRes >>> 24);// 最高位,无符号右移。
+        l_iTarget[3] = (byte) (p_iRes & 0xff);// 最低位
+        l_iTarget[2] = (byte) ((p_iRes >> 8) & 0xff);// 次低位
+        l_iTarget[1] = (byte) ((p_iRes >> 16) & 0xff);// 次高位
+        l_iTarget[0] = (byte) (p_iRes >>> 24);// 最高位,无符号右移。
         return l_iTarget;
     }
 
@@ -29,14 +29,28 @@ public class CmppUtil {
      * 对字符串md5加密
      *
      */
-    public static String getMD5(String str) throws Exception{
-        // 生成一个MD5加密计算摘要
-        MessageDigest md = MessageDigest.getInstance("MD5");
-        // 计算md5函数
-        md.update(str.getBytes());
-        // digest()最后确定返回md5 hash值，返回值为8为字符串。因为md5 hash值是16位的hex值，实际上就是8位的字符
-        // BigInteger函数则将8位的字符串转换成16位hex值，用字符串来表示；得到字符串形式的hash值
-        return new BigInteger(1, md.digest()).toString(16);
+    public static byte[] MD5(String str1) {
+        try {
+            byte[] buffer = str1.getBytes();
+            String s;
+            char hexDigist[] = {'0','1','2','3','4','5','6','7','8','9','a','b','c','d','e','f'};
+            MessageDigest md = MessageDigest.getInstance("MD5");
+            md.update(buffer);
+            byte[] datas = md.digest(); //16个字节的长整数
+            /*char[] str = new char[2*16];
+            int k = 0;
+            for(int i=0;i<16;i++){
+                byte b   = datas[i];
+                str[k++] = hexDigist[b>>>4 & 0xf];//高4位
+                str[k++] = hexDigist[b & 0xf];//低4位
+            }
+            s = new String(str);
+            return s;*/
+            return datas;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return null;
+        }
     }
 
     public static byte[] str2Byte(String p_strSrc, int p_iLength) {
