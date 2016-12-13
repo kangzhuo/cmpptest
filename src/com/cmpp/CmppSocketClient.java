@@ -249,28 +249,29 @@ class CmppSocketClient {
                     logger.info("守护线程【" + g_iNum + "】终止。");
                     g_isInterrupted = true;
                 } catch (SocketTimeoutException e) {
-                    logger.info("守护线程【" + g_iNum + "】超时读取，做第" + g_iRetry + "次超时处理。");
+                    //logger.info("守护线程【" + g_iNum + "】超时读取，做第" + g_iRetry + "次超时处理。"); //测试时服务端发送心跳就断开链接，发送心跳回执不断链接，这里不做重试判断当超时就发心跳
+                    logger.info("守护线程【" + g_iNum + "】超时读取，发送心跳");
                     if (0 == checkAndsetUsed(g_iNum)) { //先占用
-                        if (config.recvRetry <= g_iRetry++) { //到达重试次数后返回报错
-                            logger.info("守护线程【" + g_iNum + "】到达重试上限，开始销毁链接。");
-                            destroyConnect(g_iNum);
-                            break;
-                        } else {
+                        //if (config.recvRetry <= g_iRetry++) { //到达重试次数后返回报错
+                        //    logger.info("守护线程【" + g_iNum + "】到达重试上限，开始销毁链接。");
+                        //    destroyConnect(g_iNum);
+                        //    break;
+                        //} else {
                             //超过1秒没有信息则发送心跳
                             try {
                                 OutputStream l_out = g_sockets[g_iNum].getOutputStream();
                                 CmppPackData cmppPackData = new CmppPackData();
-                                logger.info("守护线程【" + g_iNum + "】发送心跳。");
+                        //        logger.info("守护线程【" + g_iNum + "】发送心跳。");
                                 System.out.print("发送心跳报文：");
-                                CmppUtil.printHexStringForByte(cmppPackData.makeCmppActiveTestReq());
-                                l_out.write(cmppPackData.makeCmppActiveTestReq());
+                                CmppUtil.printHexStringForByte(cmppPackData.makeCmppActiveTestResp(3));
+                                l_out.write(cmppPackData.makeCmppActiveTestResp(3));
                             } catch (IOException e1) {
                                 logger.error("发送心跳包异常！！！");
                                 logger.error(e1.getMessage());
                                 destroyConnect(g_iNum);
                                 break;
                             }
-                        }
+                        //}
                         unSetUsed(g_iNum);
                     }
                 } catch (Exception e) {
