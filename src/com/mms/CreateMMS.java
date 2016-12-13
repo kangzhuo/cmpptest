@@ -175,14 +175,14 @@ public class CreateMMS {
         return l_retBytes;
     }
 
-    private byte[] longToByteArray(long s) {
+    /*private byte[] longToByteArray(long s) {
         byte[] targets = new byte[4];
         for (int i = 0; i < targets.length; i++) {
             int offset = (targets.length - 1 - i) * 8;
             targets[i] = (byte) ((s >>> offset) & 0xff);
         }
         return targets;
-    }
+    }*/
 
     public static void main (String[] args) {
         try {

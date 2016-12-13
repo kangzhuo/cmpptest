@@ -11,7 +11,7 @@ import java.util.Map;
 /**
  * Created by kangbo on 2016/11/29.
  */
-public class CmppSocketClient {
+class CmppSocketClient {
     private static GetProperties config = new GetProperties();
 
     private static int g_iMaxSocket = config.maxSocket;//最大链接数
@@ -153,7 +153,7 @@ public class CmppSocketClient {
         return 0;
     }
 
-    public static int sendAndRetSocket(byte[] p_data) {
+    static int sendAndRetSocket(byte[] p_data) {
         int l_iRetry = 0;
         int l_iUsed = getSocket();
         //没有可用链接则等待
@@ -205,6 +205,8 @@ public class CmppSocketClient {
                 try {
                     //g_sockets[g_iNum].setSoTimeout(config.timeOut * 1000); 超时时间建立socket时已经设置
                     BufferedInputStream l_in = new BufferedInputStream(g_sockets[g_iNum].getInputStream());
+                    logger.debug("链接中剩余未读取字节数：" + l_in.available());
+                    //取12字节头
                     byte[] l_read = new byte[12];
                     int l_iGetLen = 0, l_iReadLen;
                     while (l_iGetLen < 12) {
@@ -220,8 +222,7 @@ public class CmppSocketClient {
                     }
                     System.out.print("接收报文头数据：");
                     CmppUtil.printHexStringForByte(l_read);
-                    //分析返回数据并处理
-                    ////////////////////////////////////////////////////////////////////////////////
+                    //根据长度取后续报文
                     int totalLength = CmppUtil.byte2int(l_read[0], l_read[1], l_read[2], l_read[3]) - 12;
                     int commandId = CmppUtil.byte2int(l_read[4], l_read[5], l_read[6], l_read[7]);
                     int seq = CmppUtil.byte2int(l_read[8], l_read[9], l_read[10], l_read[11]);
@@ -239,24 +240,9 @@ public class CmppSocketClient {
                     }
                     System.out.print("接收报文体数据：");
                     CmppUtil.printHexStringForByte(l_readBody);
-                    CmppPackData cmppPackData = new CmppPackData();
-                    if (CmppPackData.CMPP_SUBMIT == (commandId & 0x000000ff)) { //仅需要命令的最后一字节
-                        cmppPackData.readCmppSubmitResp(seq, l_readBody);
-                    } else if (CmppPackData.CMPP_ACTIVE_TEST == commandId) {
-                        CmppSocketClient.sendAndRetSocket(cmppPackData.makeCmppActiveTestResp(seq));
-                    } else if (CmppPackData.CMPP_ACTIVE_TEST == (commandId & 0x000000ff)) {
-                        cmppPackData.readCmppActiveTestResp(seq, l_readBody);
-                    } else if (CmppPackData.CMPP_QUERY == (commandId & 0x000000ff)) {
-                        cmppPackData.readCmppQueryResp(seq, l_readBody);
-                    } else if (CmppPackData.CMPP_DELIVER == commandId) {
-                        Map<String,Object> l_mapResp = cmppPackData.readCmppDeliverResp(seq, l_readBody);
-                        CmppSocketClient.sendAndRetSocket(cmppPackData.makeCmppDeliverReq(seq, (byte[]) l_mapResp.get("msgId"), (byte) 0));
-                    } else {
-                        logger.error("发现非正常返回命令编号，请关注！！！");
-                        System.out.print("接收非正常报文数据：");
-                        CmppUtil.printHexStringForByte(l_read);
-                        CmppUtil.printHexStringForByte(l_readBody);
-                    }
+                    CmppMain cmppMain = new CmppMain();
+                    ////////////////////////////////////////////////////////////////////////////////
+                    cmppMain.deliverSms(l_read, commandId, seq, l_readBody);
                     ////////////////////////////////////////////////////////////////////////////////
                     sleep(100);
                 } catch (InterruptedException e) {

@@ -3,33 +3,32 @@ package com.cmpp;
 import java.io.BufferedInputStream;
 import java.io.FileInputStream;
 import java.io.InputStream;
-import java.util.Iterator;
 import java.util.Properties;
 
 /**
  * Created by kangbo on 2016/11/29.
  */
-public class GetProperties {
-    public String host = "211.140.12.45";
-    public String port = "7890";
-    public int maxSocket = 2;
-    public int timeOut = 1;
-    public int sendRetry = 3;
-    public int recvRetry = 10;
+class GetProperties {
+    String host = "211.140.12.45";
+    String port = "7890";
+    int maxSocket = 2;
+    int timeOut = 1;
+    int sendRetry = 3;
+    int recvRetry = 10;
 
-    public String sourceAddr = "QQ1107";
-    public String spId = "911337";
-    public String pwd = "rgr61107";
-    public byte version = (byte)0x30;
-    public byte registeredDelivery = (byte)0x01;
-    public byte msgLevel = (byte)0x01;
-    public byte feeUserType = (byte)0x03;
-    public String feeType = "01";
-    public String feeCode = "000";
-    public byte[] validTime = {(byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00};
-    public byte[] atTime = {(byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00};
-    public String srcId = "106575261107666";
-    public byte[] reserve = {(byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00};
+    String sourceAddr = "QQ1107";
+    String spId = "911337";
+    String pwd = "rgr61107";
+    byte version = (byte)0x30;
+    byte registeredDelivery = (byte)0x01;
+    byte msgLevel = (byte)0x01;
+    byte feeUserType = (byte)0x03;
+    String feeType = "01";
+    String feeCode = "000";
+    byte[] validTime = {(byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00};
+    byte[] atTime = {(byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00};
+    String srcId = "106575261107666";
+    byte[] reserve = {(byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00};
 
     //0000005eh: 31 30 36 35 37 35 32 36 31 31 30 37             ; ............
     //self.Timestamp=0
@@ -42,7 +41,7 @@ public class GetProperties {
     //self.Msg_Fmt=4      #信息格式：0：ASCII串；3：短信写卡操作；4：二进制信息；8：UCS2编码；15：含GB汉字
     //self.Src_Id="106575261107" #源号码。SP的服务代码
 
-    public GetProperties() {
+    GetProperties() {
         Properties prop = new Properties();
         try {
                 InputStream in = new BufferedInputStream (new FileInputStream("a.properties"));

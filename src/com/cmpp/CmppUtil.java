@@ -1,6 +1,8 @@
 package com.cmpp;
 
 import java.security.MessageDigest;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Created by kangbo on 2016/11/29.
@@ -91,11 +93,10 @@ class CmppUtil {
             }
             System.out.print(hex.toUpperCase());
         }
-        System.out.println();
+        System.out.println("");
     }*/
 
-    static void printHexStringForByte(byte[] p_bytes)
-    {
+    static void printHexStringForByte(byte[] p_bytes) {
         for (byte l_byte : p_bytes) {
             String hex = Integer.toHexString(l_byte & 0xFF);
             if (hex.length() == 1)
@@ -104,6 +105,15 @@ class CmppUtil {
             }
             System.out.print(hex.toUpperCase());
         }
-        System.out.println();
+        System.out.println("");
+    }
+
+    static List<Byte> bytes2List(byte[] p_bytes) {
+        List<Byte> l_ret= new ArrayList<>();
+        for (byte l_byte : p_bytes) {
+            l_ret.add(l_byte);
+        }
+
+        return l_ret;
     }
 }

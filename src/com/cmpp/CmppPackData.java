@@ -10,7 +10,7 @@ import java.util.Map;
 /**
  * Created by kangbo on 2016/11/29.
  */
-public class CmppPackData {
+class CmppPackData {
     private static GetProperties config = new GetProperties();
     static final int CMPP_CONNECT = 1;
     static final int CMPP_SUBMIT = 4;
@@ -55,7 +55,7 @@ public class CmppPackData {
         return bos.toByteArray();
     }
 
-    public byte[] makeCmppSubmitReq(int p_iSeq, String p_strTel, int p_iMsgType, String p_strMsg) throws IOException {
+    byte[] makeCmppSubmitReq(int p_iSeq, String p_strTel, int p_iMsgType, String p_strMsg) throws IOException {
         byte[] msgId, pkTotal, pkNumber, registeredDelivery, msgLevel, serviceId, feeUserType,
                 feeTerminalId, tpId, tpUdhi, msgFmt, msgSrc, feeType, feeCode, validTime, atTime, srcId,
                 destUsrTl, destTerminalId, msgLength, msgContent, reserve, head;
@@ -66,7 +66,7 @@ public class CmppPackData {
         } else if (2 == p_iMsgType) { //超级短信
             msgContent = makeMMSBody(p_strTel, p_strMsg);
         } else if (3 == p_iMsgType) { //闪信
-            msgContent = p_strMsg.getBytes();
+            msgContent = p_strMsg.getBytes("Unicode");
         } else {
             return null;
         }
@@ -262,6 +262,8 @@ public class CmppPackData {
         byte[] stat = new byte[0], submitTime = new byte[0], doneTime = new byte[0], destTerminalId = new byte[0];
         int smscSequence = 0;
         if (1 == registeredDelivery) {
+            msgId = new byte[] {msgContent[0], msgContent[1], msgContent[2], msgContent[3],
+                    msgContent[4], msgContent[5], msgContent[6], msgContent[7]};
             stat = new byte[] {msgContent[8], msgContent[9], msgContent[10], msgContent[11],
                     msgContent[12], msgContent[13], msgContent[14]};
             submitTime = new byte[] {msgContent[15], msgContent[16], msgContent[17], msgContent[18],
