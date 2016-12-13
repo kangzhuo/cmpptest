@@ -6,8 +6,6 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.net.Socket;
 import java.net.SocketTimeoutException;
-import java.util.LinkedList;
-import java.util.List;
 import java.util.Map;
 
 /**
@@ -96,24 +94,31 @@ public class CmppSocketClient {
             OutputStream l_out = l_socket.getOutputStream();
             CmppPackData cmppPackData = new CmppPackData();
             logger.debug("传输登陆数据");
+            System.out.print("发送登陆报文：");
             CmppUtil.printHexStringForByte(cmppPackData.makeCmppConnectReq());
             l_out.write(cmppPackData.makeCmppConnectReq());
 
-            l_socket.setSoTimeout(3 * 1000);
+            l_socket.setSoTimeout(config.timeOut * 1000); //设置超时时间
             BufferedInputStream l_in = new BufferedInputStream(l_socket.getInputStream());
-            int l_iRet;
-            List<Byte> l_rets = new LinkedList<>();
-            logger.debug("开始接收登陆结果");
-            while ((l_iRet = l_in.read()) != -1) {
-                l_rets.add((byte) l_iRet);
+            logger.debug("接收登陆结果");
+            byte[] l_read = new byte[30];
+            int l_iGetLen = 0, l_iReadLen;
+            while (l_iGetLen < 30) {
+                l_iReadLen = l_in.read(l_read, l_iGetLen, 30 - l_iGetLen);
+                if (-1 == l_iReadLen) {
+                    logger.error("读取链接建立返回数据失败，未读取到完整数据！！！");
+                    return null;
+                }
+                l_iGetLen = l_iGetLen + l_iReadLen;
             }
-            CmppUtil.printHexString(l_rets.toArray());
+            System.out.print("接收登陆报文数据：");
+            CmppUtil.printHexStringForByte(l_read);
 
-            Map<String,String> l_mapResp = cmppPackData.readCmppConnectResp(l_rets);
+            Map<String,Object> l_mapResp = cmppPackData.readCmppConnectResp(l_read);
             if (l_mapResp == null || !l_mapResp.containsKey("status")) {
-                logger.error("读取链接建立返回数据失败，返回数据异常！！！");
+                logger.error("读取链接建立返回数据失败，解析返回数据异常！！！");
                 return null;
-            } else if (!l_mapResp.get("status").equals("0")) {
+            } else if (0 != (int) l_mapResp.get("status")) {
                 logger.error("读取链接建立返回数据失败【" + l_mapResp.get("status") + "】，最高支持版本【" + l_mapResp.get("version") + "】！！！");
                 return null;
             }
@@ -166,10 +171,12 @@ public class CmppSocketClient {
                 return -1;
             }
         }
+
         logger.info("成功获取到链接，编号【" + l_iUsed + "】开始写入数据。");
         //写数据
         try {
             OutputStream l_out = g_sockets[l_iUsed].getOutputStream();
+            System.out.print("发送报文数据：");
             CmppUtil.printHexStringForByte(p_data);
             l_out.write(p_data);
         } catch (IOException e) {
@@ -180,6 +187,7 @@ public class CmppSocketClient {
         }
 
         retSocket(l_iUsed);
+        logger.info("成功写入数据，编号【" + l_iUsed + "】释放占用。");
         return 0;
     }
 
@@ -195,31 +203,69 @@ public class CmppSocketClient {
         public void run() {
             while (!g_isInterrupted) {
                 try {
-                    logger.info("开始读入数据。");
-                    g_sockets[g_iNum].setSoTimeout(config.timeOut * 1000);
+                    //g_sockets[g_iNum].setSoTimeout(config.timeOut * 1000); 超时时间建立socket时已经设置
                     BufferedInputStream l_in = new BufferedInputStream(g_sockets[g_iNum].getInputStream());
-                    int l_iRet;
-                    List<Byte> l_rets = new LinkedList<>();
-                    while ((l_iRet = l_in.read()) != -1) {
-                        g_iRetry = 0;
-                        l_rets.add((byte) l_iRet);
+                    byte[] l_read = new byte[12];
+                    int l_iGetLen = 0, l_iReadLen;
+                    while (l_iGetLen < 12) {
+                        l_iReadLen = l_in.read(l_read, l_iGetLen, 12 - l_iGetLen);
+                        if (-1 == l_iReadLen) {
+                            logger.error("未读取到完整数据，重新获取！！！");
+                            System.out.print("接收不完整报文头数据：");
+                            CmppUtil.printHexStringForByte(l_read);
+                            continue;
+                        }
+                        g_iRetry = 0; //初始化心跳链接计数器
+                        l_iGetLen = l_iGetLen + l_iReadLen;
                     }
-                    //////////////////////////////////////////////
-                    //处理待补充
-                    logger.info("读入数据成功。");
-                    CmppUtil.printHexString(l_rets.toArray());
+                    System.out.print("接收报文头数据：");
+                    CmppUtil.printHexStringForByte(l_read);
+                    //分析返回数据并处理
+                    ////////////////////////////////////////////////////////////////////////////////
+                    int totalLength = CmppUtil.byte2int(l_read[0], l_read[1], l_read[2], l_read[3]) - 12;
+                    int commandId = CmppUtil.byte2int(l_read[4], l_read[5], l_read[6], l_read[7]);
+                    int seq = CmppUtil.byte2int(l_read[8], l_read[9], l_read[10], l_read[11]);
+                    byte[] l_readBody = new byte[totalLength];
+                    l_iGetLen = 0;
+                    while (l_iGetLen < totalLength && totalLength > 0) {
+                        l_iReadLen = l_in.read(l_readBody, l_iGetLen, totalLength - l_iGetLen);
+                        if (-1 == l_iReadLen) {
+                            logger.error("未读取到完整数据，重新获取！！！");
+                            System.out.print("接收不完整报文体数据：");
+                            CmppUtil.printHexStringForByte(l_readBody);
+                            continue;
+                        }
+                        l_iGetLen = l_iGetLen + l_iReadLen;
+                    }
+                    System.out.print("接收报文体数据：");
+                    CmppUtil.printHexStringForByte(l_readBody);
                     CmppPackData cmppPackData = new CmppPackData();
-                    cmppPackData.readCmppSubmitResp(l_rets);
-                    //////////////////////////////////////////////
-
-                    sleep(1000);
+                    if (CmppPackData.CMPP_SUBMIT == (commandId & 0x000000ff)) { //仅需要命令的最后一字节
+                        cmppPackData.readCmppSubmitResp(seq, l_readBody);
+                    } else if (CmppPackData.CMPP_ACTIVE_TEST == commandId) {
+                        CmppSocketClient.sendAndRetSocket(cmppPackData.makeCmppActiveTestResp(seq));
+                    } else if (CmppPackData.CMPP_ACTIVE_TEST == (commandId & 0x000000ff)) {
+                        cmppPackData.readCmppActiveTestResp(seq, l_readBody);
+                    } else if (CmppPackData.CMPP_QUERY == (commandId & 0x000000ff)) {
+                        cmppPackData.readCmppQueryResp(seq, l_readBody);
+                    } else if (CmppPackData.CMPP_DELIVER == commandId) {
+                        Map<String,Object> l_mapResp = cmppPackData.readCmppDeliverResp(seq, l_readBody);
+                        CmppSocketClient.sendAndRetSocket(cmppPackData.makeCmppDeliverReq(seq, (byte[]) l_mapResp.get("msgId"), (byte) 0));
+                    } else {
+                        logger.error("发现非正常返回命令编号，请关注！！！");
+                        System.out.print("接收非正常报文数据：");
+                        CmppUtil.printHexStringForByte(l_read);
+                        CmppUtil.printHexStringForByte(l_readBody);
+                    }
+                    ////////////////////////////////////////////////////////////////////////////////
+                    sleep(100);
                 } catch (InterruptedException e) {
                     logger.info("守护线程【" + g_iNum + "】终止。");
                     g_isInterrupted = true;
                 } catch (SocketTimeoutException e) {
                     logger.info("守护线程【" + g_iNum + "】超时读取，做第" + g_iRetry + "次超时处理。");
                     if (0 == checkAndsetUsed(g_iNum)) { //先占用
-                        if (config.recvRetry >= g_iRetry++) { //到达重试次数后返回报错
+                        if (config.recvRetry <= g_iRetry++) { //到达重试次数后返回报错
                             logger.info("守护线程【" + g_iNum + "】到达重试上限，开始销毁链接。");
                             destroyConnect(g_iNum);
                             break;
@@ -229,18 +275,22 @@ public class CmppSocketClient {
                                 OutputStream l_out = g_sockets[g_iNum].getOutputStream();
                                 CmppPackData cmppPackData = new CmppPackData();
                                 logger.info("守护线程【" + g_iNum + "】发送心跳。");
-                                CmppUtil.printHexStringForByte(cmppPackData.makeCmppActiveTest());
-                                l_out.write(cmppPackData.makeCmppActiveTest());
+                                System.out.print("发送心跳报文：");
+                                CmppUtil.printHexStringForByte(cmppPackData.makeCmppActiveTestReq());
+                                l_out.write(cmppPackData.makeCmppActiveTestReq());
                             } catch (IOException e1) {
                                 logger.error("发送心跳包异常！！！");
                                 logger.error(e1.getMessage());
+                                destroyConnect(g_iNum);
                                 break;
                             }
                         }
+                        unSetUsed(g_iNum);
                     }
                 } catch (Exception e) {
                     logger.error("出现异常！！！");
                     logger.error(e.getMessage());
+                    destroyConnect(g_iNum);
                 }
             }
         }

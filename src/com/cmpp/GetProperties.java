@@ -25,10 +25,10 @@ public class GetProperties {
     public byte msgLevel = (byte)0x01;
     public byte feeUserType = (byte)0x03;
     public String feeType = "01";
-    public String feeCode = "000000";
+    public String feeCode = "000";
     public byte[] validTime = {(byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00};
     public byte[] atTime = {(byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00};
-    public String srcId = "106575261107";
+    public String srcId = "106575261107666";
     public byte[] reserve = {(byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00};
 
     //0000005eh: 31 30 36 35 37 35 32 36 31 31 30 37             ; ............

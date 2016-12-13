@@ -1,17 +1,12 @@
 package com.cmpp;
 
-import org.apache.log4j.Logger;
-
-import java.math.BigInteger;
 import java.security.MessageDigest;
 
 /**
  * Created by kangbo on 2016/11/29.
  */
-public class CmppUtil {
-    private static Logger logger = Logger.getLogger(CmppUtil.class);
-
-    public static byte[] int2byte(int p_iRes) {
+class CmppUtil {
+    static byte[] int2byte(int p_iRes) {
         byte[] l_iTarget = new byte[4];
 
         l_iTarget[3] = (byte) (p_iRes & 0xff);// 最低位
@@ -21,7 +16,7 @@ public class CmppUtil {
         return l_iTarget;
     }
 
-    public static int byte2int(byte p_b1, byte p_b2, byte p_b3, byte p_b4) {
+    static int byte2int(byte p_b1, byte p_b2, byte p_b3, byte p_b4) {
         return (p_b4 & 0xFF) | ((p_b3 & 0xFF) << 8) | ((p_b2 & 0xFF) << 16) | ((p_b1 & 0xFF) << 24);
     }
 
@@ -29,14 +24,15 @@ public class CmppUtil {
      * 对字符串md5加密
      *
      */
-    public static byte[] MD5(String str1) {
+    static byte[] MD5(String str1) {
         try {
             byte[] buffer = str1.getBytes();
-            String s;
-            char hexDigist[] = {'0','1','2','3','4','5','6','7','8','9','a','b','c','d','e','f'};
+            //String s;
+            //char hexDigist[] = {'0','1','2','3','4','5','6','7','8','9','a','b','c','d','e','f'};
             MessageDigest md = MessageDigest.getInstance("MD5");
             md.update(buffer);
-            byte[] datas = md.digest(); //16个字节的长整数
+            byte[] datas;
+            datas = md.digest(); //16个字节的长整数
             /*char[] str = new char[2*16];
             int k = 0;
             for(int i=0;i<16;i++){
@@ -53,7 +49,7 @@ public class CmppUtil {
         }
     }
 
-    public static byte[] str2Byte(String p_strSrc, int p_iLength) {
+    static byte[] str2Byte(String p_strSrc, int p_iLength) {
         if (p_strSrc.length() > p_iLength) {
             return p_strSrc.substring(0, p_iLength).getBytes();
         } else if (p_strSrc.length() < p_iLength) {
@@ -69,7 +65,23 @@ public class CmppUtil {
         return p_strSrc.getBytes();
     }
 
-    public static void printHexString(Object[] p_bytes)
+    static byte[] str2ByteHead(String p_strSrc, int p_iLength) {
+        if (p_strSrc.length() > p_iLength) {
+            return p_strSrc.substring(0, p_iLength).getBytes();
+        } else if (p_strSrc.length() < p_iLength) {
+            byte[] l_rets = new byte[p_iLength];
+            int l_iAdd = p_iLength - p_strSrc.length();
+            int i, j;
+            for (i = 0; i < p_strSrc.length(); i++)
+                l_rets[i] = (byte) p_strSrc.charAt(i);
+            for (j = 0; j < l_iAdd; j++)
+                l_rets[i + j] = (byte) 0x00;
+            return l_rets;
+        }
+        return p_strSrc.getBytes();
+    }
+
+    /*static void printHexString(Object[] p_bytes)
     {
         for (Object l_byte : p_bytes) {
             String hex = Integer.toHexString((byte)l_byte & 0xFF);
@@ -80,9 +92,9 @@ public class CmppUtil {
             System.out.print(hex.toUpperCase());
         }
         System.out.println();
-    }
+    }*/
 
-    public static void printHexStringForByte(byte[] p_bytes)
+    static void printHexStringForByte(byte[] p_bytes)
     {
         for (byte l_byte : p_bytes) {
             String hex = Integer.toHexString(l_byte & 0xFF);

@@ -5,7 +5,6 @@ import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 /**
@@ -13,44 +12,29 @@ import java.util.Map;
  */
 public class CmppPackData {
     private static GetProperties config = new GetProperties();
-    public static final int CMPP_CONNECT = 1;
-    public static final int CMPP_SUBMIT = 4;
-    public static final int CMPP_QUERY = 6;
-    public static final int CMPP_ACTIVE_TEST = 8;
+    static final int CMPP_CONNECT = 1;
+    static final int CMPP_SUBMIT = 4;
+    static final int CMPP_DELIVER = 5;
+    static final int CMPP_QUERY = 6;
+    static final int CMPP_ACTIVE_TEST = 8;
 
-    private byte[] makeHead(int p_iType, int p_iBodyLength, byte[] p_strDoneCode) throws IOException {
-        byte[] totalLength, commandId, seqId;
-
-        if (CmppPackData.CMPP_CONNECT == p_iType) {
-            totalLength = CmppUtil.int2byte(12 + 27);
-            commandId = CmppUtil.int2byte(CmppPackData.CMPP_CONNECT);
-            seqId = p_strDoneCode;
-        } else if (CmppPackData.CMPP_SUBMIT == p_iType) {
-            totalLength = CmppUtil.int2byte(12 + p_iBodyLength);
-            commandId = CmppUtil.int2byte(CmppPackData.CMPP_SUBMIT);
-            seqId = p_strDoneCode;
-        } else if (CmppPackData.CMPP_ACTIVE_TEST == p_iType){
-            totalLength = CmppUtil.int2byte(12);
-            commandId = CmppUtil.int2byte(CmppPackData.CMPP_SUBMIT);
-            seqId = p_strDoneCode;
-        } else {
-            return new byte[] {};
-        }
+    private byte[] makeHead(int p_iType, int p_iBodyLength, byte[] p_strSeqId) throws IOException {
+        byte[] totalLength = CmppUtil.int2byte(12 + p_iBodyLength);
+        byte[] commandId = CmppUtil.int2byte(p_iType);
 
         ByteArrayOutputStream bos = new ByteArrayOutputStream();
         bos.write(totalLength);
         bos.write(commandId);
-        bos.write(seqId);
+        bos.write(p_strSeqId);
         bos.flush();
         return bos.toByteArray();
     }
 
-    public byte[] makeCmppConnectReq() throws Exception {
+    byte[] makeCmppConnectReq() throws Exception {
 
         Date l_nowDate = new Date();
         SimpleDateFormat df = new SimpleDateFormat("MMddHHmmss");
         String l_strTime = df.format(l_nowDate);
-        l_strTime = "1212112900";
 
         byte[] l_bytes = {(byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00};
 
@@ -97,23 +81,23 @@ public class CmppPackData {
         pkNumber = new byte[] {(byte)0x01};               //相同Msg_Id的信息序号，从1开始
         registeredDelivery = new byte[] {CmppPackData.config.registeredDelivery};    //是否要求返回状态确认报告：0：不需要 1：需要 2：产生SMC话
         msgLevel = new byte[] {CmppPackData.config.msgLevel};    //信息级别
-        serviceId = CmppUtil.str2Byte("xsms", 10);
+        serviceId = CmppUtil.str2ByteHead("xsms", 10);
         feeUserType = new byte[] {CmppPackData.config.feeUserType};
-        feeTerminalId = CmppUtil.str2Byte(p_strTel, 21);
+        feeTerminalId = CmppUtil.str2ByteHead(p_strTel, 21);
         tpId = new byte[] {(byte)0x00};
         tpUdhi = 1 == p_iMsgType ? new byte[] {(byte)0x00} : new byte[] {(byte)0x01};
         msgFmt = 1 == p_iMsgType ? new byte[] {(byte)0x0f} : (p_iMsgType == 2 ? new byte[] {(byte)0x04} : new byte[] {(byte)0x18});
         msgSrc = CmppPackData.config.spId.getBytes();
         feeType = CmppPackData.config.feeType.getBytes();
-        feeCode = CmppPackData.config.feeCode.getBytes();
+        feeCode = CmppUtil.str2ByteHead(CmppPackData.config.feeCode, 6);
         validTime = CmppPackData.config.validTime;
         atTime = CmppPackData.config.atTime;
-        srcId = CmppUtil.str2Byte(CmppPackData.config.srcId, 21);
+        srcId = CmppUtil.str2ByteHead(CmppPackData.config.srcId, 21);
         destUsrTl = new byte[] {(byte)0x01};
-        destTerminalId = CmppUtil.str2Byte(p_strTel, 21);
+        destTerminalId = CmppUtil.str2ByteHead(p_strTel, 21);
         reserve = CmppPackData.config.reserve;
 
-        head = makeHead(CmppPackData.CMPP_CONNECT, 147 + l_iMsgLength, CmppUtil.int2byte(p_iSeq));
+        head = makeHead(CmppPackData.CMPP_SUBMIT, 147 + l_iMsgLength, CmppUtil.int2byte(p_iSeq));
 
         ByteArrayOutputStream bos = new ByteArrayOutputStream();
         bos.write(head);
@@ -144,19 +128,30 @@ public class CmppPackData {
         return bos.toByteArray();
     }
 
-    public byte[] makeCmppQueryReq() throws IOException {
+    byte[] makeCmppDeliverReq(int p_iSeq, byte[] msgId, byte result) throws IOException {
+
+        byte[] head = makeHead(CmppPackData.CMPP_DELIVER | 0x80000000, 9, CmppUtil.int2byte(p_iSeq));
+
+        ByteArrayOutputStream bos = new ByteArrayOutputStream();
+        bos.write(head);
+        bos.write(msgId);
+        bos.write(result);
+        bos.flush();
+        return bos.toByteArray();
+    }
+
+    byte[] makeCmppQueryReq() throws IOException {
 
         Date l_nowDate = new Date();
         SimpleDateFormat df = new SimpleDateFormat("YYYYMMDD");
         String l_strTime = df.format(l_nowDate);
 
-        byte[] time, queryType, queryCode, reserve, head;
-        time = CmppUtil.str2Byte(l_strTime, 8);
-        queryType = new byte[] {(byte)0x00};
-        queryCode = new byte[] {(byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00};
-        reserve = new byte[] {(byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00};
+        byte[] time = CmppUtil.str2Byte(l_strTime, 8);
+        byte[] queryType = new byte[] {(byte)0x00};
+        byte[] queryCode = new byte[] {(byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00};
+        byte[] reserve = new byte[] {(byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00};
 
-        head = makeHead(CmppPackData.CMPP_QUERY, 27, new byte[] {(byte)0x00, (byte)0x00, (byte)0x00, (byte)0x02});
+        byte[] head = makeHead(CmppPackData.CMPP_QUERY, 27, new byte[] {(byte)0x00, (byte)0x00, (byte)0x00, (byte)0x02});
 
         ByteArrayOutputStream bos = new ByteArrayOutputStream();
         bos.write(head);
@@ -168,136 +163,190 @@ public class CmppPackData {
         return bos.toByteArray();
     }
 
-    public byte[] makeCmppActiveTest() throws IOException {
-        return makeHead(CmppPackData.CMPP_ACTIVE_TEST, 0, new byte[] {(byte)0x00, (byte)0x00, (byte)0x00, (byte)0x03});
+    byte[] makeCmppActiveTestReq() throws IOException {
+        byte[] head = makeHead(CmppPackData.CMPP_ACTIVE_TEST, 0, new byte[] {(byte)0x00, (byte)0x00, (byte)0x00, (byte)0x03});
+
+        ByteArrayOutputStream bos = new ByteArrayOutputStream();
+        bos.write(head);
+        bos.flush();
+        return bos.toByteArray();
     }
 
-    public Map<String,String> readCmppConnectResp(List<Byte> p_respDatas) {
-        Map<String,String> l_mapRet = new HashMap<>();
+    byte[] makeCmppActiveTestResp(int p_iSeq) throws IOException {
+        byte[] head = makeHead(CmppPackData.CMPP_ACTIVE_TEST | 0x80000000, 1, CmppUtil.int2byte(p_iSeq));
 
-        if (p_respDatas.size() < 30)
+        ByteArrayOutputStream bos = new ByteArrayOutputStream();
+        bos.write(head);
+        bos.write((byte) 0x00);
+        bos.flush();
+        return bos.toByteArray();
+    }
+
+    Map<String,Object> readCmppConnectResp(byte[] p_respDatas) {
+        Map<String,Object> l_mapRet = new HashMap<>();
+
+        if (p_respDatas.length < 30)
             return null;
 
-        int l_iCmppType = CmppUtil.byte2int(p_respDatas.get(4), p_respDatas.get(5), p_respDatas.get(6), p_respDatas.get(7));
-        if (CmppPackData.CMPP_CONNECT != l_iCmppType) {
+        int l_iCmppType = CmppUtil.byte2int(p_respDatas[4], p_respDatas[5], p_respDatas[6], p_respDatas[7]);
+        if (CmppPackData.CMPP_CONNECT != (l_iCmppType & 0x000000ff)) { //仅需要命令的最后一字节
             return null;
         }
 
-        byte[] totalLength = {p_respDatas.get(0), p_respDatas.get(1), p_respDatas.get(2), p_respDatas.get(3)};
-        byte[] commandId = {p_respDatas.get(4), p_respDatas.get(5), p_respDatas.get(6), p_respDatas.get(7)};
-        byte[] sequence = {p_respDatas.get(8), p_respDatas.get(9), p_respDatas.get(10), p_respDatas.get(11)};
-        byte[] status = {p_respDatas.get(12)};
-        byte[] authenticatorISMG = {p_respDatas.get(13), p_respDatas.get(14), p_respDatas.get(15), p_respDatas.get(16),
-                p_respDatas.get(17), p_respDatas.get(18), p_respDatas.get(19), p_respDatas.get(20),
-                p_respDatas.get(21), p_respDatas.get(22), p_respDatas.get(23), p_respDatas.get(24),
-                p_respDatas.get(25), p_respDatas.get(26), p_respDatas.get(27), p_respDatas.get(28)};
-        byte[] version = {p_respDatas.get(29)};
+        int totalLength = CmppUtil.byte2int(p_respDatas[0], p_respDatas[1], p_respDatas[2], p_respDatas[3]);
+        int commandId = CmppUtil.byte2int(p_respDatas[4], p_respDatas[5], p_respDatas[6], p_respDatas[7]);
+        int seq = CmppUtil.byte2int(p_respDatas[8], p_respDatas[9], p_respDatas[10], p_respDatas[11]);
+        int status = p_respDatas[12];
+        byte[] authenticatorISMG = {p_respDatas[13], p_respDatas[14], p_respDatas[15], p_respDatas[16],
+                p_respDatas[17], p_respDatas[18], p_respDatas[19], p_respDatas[20],
+                p_respDatas[21], p_respDatas[22], p_respDatas[23], p_respDatas[24],
+                p_respDatas[25], p_respDatas[26], p_respDatas[27], p_respDatas[28]};
+        int version = p_respDatas[29];
 
-        l_mapRet.put("totalLength", new String(totalLength));
-        l_mapRet.put("commandId", new String(commandId));
-        l_mapRet.put("sequence", new String(sequence));
-        l_mapRet.put("status", new String(status));
-        l_mapRet.put("authenticatorISMG", new String(authenticatorISMG));
-        l_mapRet.put("version", new String(version));
+        l_mapRet.put("totalLength", totalLength);
+        l_mapRet.put("commandId", commandId);
+        l_mapRet.put("seq", seq);
+        l_mapRet.put("status", status);
+        l_mapRet.put("authenticatorISMG", authenticatorISMG);
+        l_mapRet.put("version", version);
         return l_mapRet;
     }
 
-    public Map<String,String> readCmppSubmitResp(List<Byte> p_respDatas) {
-        Map<String,String> l_mapRet = new HashMap<>();
+    Map<String,Object> readCmppSubmitResp(int p_iSeq, byte[] p_respBodys) {
+        Map<String,Object> l_mapRet = new HashMap<>();
 
-        if (p_respDatas.size() < 21)
+        if (p_respBodys.length < 9)
             return null;
 
-        int l_iCmppType = CmppUtil.byte2int(p_respDatas.get(4), p_respDatas.get(5), p_respDatas.get(6), p_respDatas.get(7));
-        if (CmppPackData.CMPP_QUERY == l_iCmppType) {
-            readCmppQueryResp(p_respDatas);
-        } else if (CmppPackData.CMPP_ACTIVE_TEST == l_iCmppType) {
-            readCmppActiveTestResp(p_respDatas);
-        } else if (CmppPackData.CMPP_SUBMIT != l_iCmppType) {
-            return null;
-        }
+        byte[] msgId = {p_respBodys[0], p_respBodys[1], p_respBodys[2], p_respBodys[3],
+                p_respBodys[4], p_respBodys[5], p_respBodys[6], p_respBodys[7]};
+        int result = p_respBodys[8];
 
-        byte[] totalLength = {p_respDatas.get(0), p_respDatas.get(1), p_respDatas.get(2), p_respDatas.get(3)};
-        byte[] commandId = {p_respDatas.get(4), p_respDatas.get(5), p_respDatas.get(6), p_respDatas.get(7)};
-        byte[] sequence = {p_respDatas.get(8), p_respDatas.get(9), p_respDatas.get(10), p_respDatas.get(11)};
-        byte[] msgId = {p_respDatas.get(12), p_respDatas.get(13), p_respDatas.get(14), p_respDatas.get(15),
-                p_respDatas.get(16), p_respDatas.get(17), p_respDatas.get(18), p_respDatas.get(19)};
-        byte[] result = {p_respDatas.get(20)};
-
-        l_mapRet.put("totalLength", new String(totalLength));
-        l_mapRet.put("commandId", new String(commandId));
-        l_mapRet.put("sequence", new String(sequence));
-        l_mapRet.put("msgId", new String(msgId));
-        l_mapRet.put("result", new String(result));
-
-        return l_mapRet;
-    }
-
-    public Map<String,String> readCmppQueryResp(List<Byte> p_respDatas) {
-        Map<String,String> l_mapRet = new HashMap<>();
-
-        if (p_respDatas.size() < 59)
-            return null;
-
-        int l_iCmppType = CmppUtil.byte2int(p_respDatas.get(4), p_respDatas.get(5), p_respDatas.get(6), p_respDatas.get(7));
-        if (CmppPackData.CMPP_QUERY != l_iCmppType) {
-            return null;
-        }
-
-        byte[] totalLength = {p_respDatas.get(0), p_respDatas.get(1), p_respDatas.get(2), p_respDatas.get(3)};
-        byte[] commandId = {p_respDatas.get(4), p_respDatas.get(5), p_respDatas.get(6), p_respDatas.get(7)};
-        byte[] sequence = {p_respDatas.get(8), p_respDatas.get(9), p_respDatas.get(10), p_respDatas.get(11)};
-        byte[] time = {p_respDatas.get(12), p_respDatas.get(13), p_respDatas.get(14), p_respDatas.get(15),
-                p_respDatas.get(16), p_respDatas.get(17), p_respDatas.get(18), p_respDatas.get(19)};
-        byte[] queryTime = {p_respDatas.get(20)};
-        byte[] queryCode = {p_respDatas.get(21), p_respDatas.get(22), p_respDatas.get(23), p_respDatas.get(24),
-                p_respDatas.get(25), p_respDatas.get(26), p_respDatas.get(27), p_respDatas.get(28),
-                p_respDatas.get(29), p_respDatas.get(30)};
-        byte[] mtTlMsg = {p_respDatas.get(31), p_respDatas.get(32), p_respDatas.get(33), p_respDatas.get(34)};
-        byte[] mtTlUsr = {p_respDatas.get(35), p_respDatas.get(36), p_respDatas.get(37), p_respDatas.get(38)};
-        byte[] mtScs = {p_respDatas.get(39), p_respDatas.get(40), p_respDatas.get(41), p_respDatas.get(42)};
-        byte[] mtFl = {p_respDatas.get(43), p_respDatas.get(44), p_respDatas.get(45), p_respDatas.get(46)};
-        byte[] moScs = {p_respDatas.get(47), p_respDatas.get(48), p_respDatas.get(49), p_respDatas.get(50)};
-        byte[] moWt = {p_respDatas.get(51), p_respDatas.get(52), p_respDatas.get(53), p_respDatas.get(54)};
-        byte[] moFl = {p_respDatas.get(55), p_respDatas.get(56), p_respDatas.get(57), p_respDatas.get(58)};
-
-        l_mapRet.put("totalLength", new String(totalLength));
-        l_mapRet.put("commandId", new String(commandId));
-        l_mapRet.put("sequence", new String(sequence));
-        l_mapRet.put("time", new String(time));
-        l_mapRet.put("queryTime", new String(queryTime));
-        l_mapRet.put("queryCode", new String(queryCode));
-        l_mapRet.put("mtTlMsg", new String(mtTlMsg));
-        l_mapRet.put("mtTlUsr", new String(mtTlUsr));
-        l_mapRet.put("mtScs", new String(mtScs));
-        l_mapRet.put("mtFl", new String(mtFl));
-        l_mapRet.put("moScs", new String(moScs));
-        l_mapRet.put("moWt", new String(moWt));
-        l_mapRet.put("moFl", new String(moFl));
+        l_mapRet.put("seq", p_iSeq);
+        l_mapRet.put("msgId", msgId);
+        l_mapRet.put("result", result);
 
         return l_mapRet;
     }
 
-    public Map<String,String> readCmppActiveTestResp(List<Byte> p_respDatas) {
-        Map<String,String> l_mapRet = new HashMap<>();
+    Map<String,Object> readCmppDeliverResp(int p_iSeq, byte[] p_respBodys) {
+        Map<String,Object> l_mapRet = new HashMap<>();
 
-        if (p_respDatas.size() < 13)
-            return null;
+        byte[] msgId = {p_respBodys[0], p_respBodys[1], p_respBodys[2], p_respBodys[3],
+                p_respBodys[4], p_respBodys[5], p_respBodys[6], p_respBodys[7]};
+        byte[] destId = {p_respBodys[8], p_respBodys[9], p_respBodys[10], p_respBodys[11],
+                p_respBodys[12], p_respBodys[13], p_respBodys[14], p_respBodys[15],
+                p_respBodys[16], p_respBodys[17], p_respBodys[18], p_respBodys[19],
+                p_respBodys[20], p_respBodys[21], p_respBodys[22], p_respBodys[23],
+                p_respBodys[24], p_respBodys[25], p_respBodys[26], p_respBodys[27],
+                p_respBodys[28]};
+        byte[] serviceId = {p_respBodys[29], p_respBodys[30], p_respBodys[31], p_respBodys[32],
+                p_respBodys[33], p_respBodys[34], p_respBodys[35], p_respBodys[36],
+                p_respBodys[37], p_respBodys[38]};
+        int tpPid = p_respBodys[39];
+        int tpUdhi = p_respBodys[40];
+        int msgFmt = p_respBodys[41];
+        byte[] srcTerminalId = {p_respBodys[42], p_respBodys[43], p_respBodys[44], p_respBodys[45],
+                p_respBodys[46], p_respBodys[47], p_respBodys[48], p_respBodys[49],
+                p_respBodys[50], p_respBodys[51], p_respBodys[52], p_respBodys[53],
+                p_respBodys[54], p_respBodys[55], p_respBodys[56], p_respBodys[57],
+                p_respBodys[58], p_respBodys[59], p_respBodys[60], p_respBodys[61],
+                p_respBodys[62]};
+        int registeredDelivery = p_respBodys[63];
+        int msgLength = p_respBodys[64];
+        byte[] msgContent = new byte[msgLength];
+        System.arraycopy(p_respBodys, 65, msgContent, 0, msgLength);
+        byte[] reserved = new byte[8];
+        System.arraycopy(p_respBodys, 65 + msgLength, reserved, 0, 8);
 
-        int l_iCmppType = CmppUtil.byte2int(p_respDatas.get(4), p_respDatas.get(5), p_respDatas.get(6), p_respDatas.get(7));
-        if (CmppPackData.CMPP_ACTIVE_TEST != l_iCmppType) {
-            return null;
+        byte[] stat = new byte[0], submitTime = new byte[0], doneTime = new byte[0], destTerminalId = new byte[0];
+        int smscSequence = 0;
+        if (1 == registeredDelivery) {
+            stat = new byte[] {msgContent[8], msgContent[9], msgContent[10], msgContent[11],
+                    msgContent[12], msgContent[13], msgContent[14]};
+            submitTime = new byte[] {msgContent[15], msgContent[16], msgContent[17], msgContent[18],
+                    msgContent[19], msgContent[20], msgContent[21], msgContent[22],
+                    msgContent[23], msgContent[24]};
+            doneTime = new byte[] {msgContent[25], msgContent[26], msgContent[27], msgContent[28],
+                    msgContent[29], msgContent[30], msgContent[31], msgContent[32],
+                    msgContent[33], msgContent[34]};
+            destTerminalId = new byte[] {p_respBodys[35], p_respBodys[36], p_respBodys[37], p_respBodys[38],
+                    p_respBodys[39], p_respBodys[40], p_respBodys[41], p_respBodys[42],
+                    p_respBodys[43], p_respBodys[44], p_respBodys[45], p_respBodys[46],
+                    p_respBodys[47], p_respBodys[48], p_respBodys[49], p_respBodys[50],
+                    p_respBodys[51], p_respBodys[52], p_respBodys[53], p_respBodys[54],
+                    p_respBodys[55]};
+            smscSequence = CmppUtil.byte2int(p_respBodys[56], p_respBodys[57], p_respBodys[58], p_respBodys[59]);
         }
 
-        byte[] totalLength = {p_respDatas.get(0), p_respDatas.get(1), p_respDatas.get(2), p_respDatas.get(3)};
-        byte[] commandId = {p_respDatas.get(4), p_respDatas.get(5), p_respDatas.get(6), p_respDatas.get(7)};
-        byte[] sequence = {p_respDatas.get(8), p_respDatas.get(9), p_respDatas.get(10), p_respDatas.get(11)};
-        byte[] reserved = {p_respDatas.get(12)};
+        l_mapRet.put("seq", p_iSeq);
+        l_mapRet.put("msgId", msgId);
+        l_mapRet.put("destId", destId);
+        l_mapRet.put("serviceId", serviceId);
+        l_mapRet.put("tpPid", tpPid);
+        l_mapRet.put("tpUdhi", tpUdhi);
+        l_mapRet.put("msgFmt", msgFmt);
+        l_mapRet.put("srcTerminalId", srcTerminalId);
+        l_mapRet.put("registeredDelivery", registeredDelivery);
+        l_mapRet.put("msgLength", msgLength);
+        l_mapRet.put("msgContent", msgContent);
+        l_mapRet.put("reserved", reserved);
+        l_mapRet.put("stat", stat);
+        l_mapRet.put("submitTime", submitTime);
+        l_mapRet.put("doneTime", doneTime);
+        l_mapRet.put("destTerminalId", destTerminalId);
+        l_mapRet.put("smscSequence", smscSequence);
 
-        l_mapRet.put("totalLength", new String(totalLength));
-        l_mapRet.put("commandId", new String(commandId));
-        l_mapRet.put("sequence", new String(sequence));
-        l_mapRet.put("reserved", new String(reserved));
+        return l_mapRet;
+    }
+
+    Map<String,Object> readCmppQueryResp(int p_iSeq, byte[] p_respDatas) {
+        Map<String,Object> l_mapRet = new HashMap<>();
+
+        if (p_respDatas.length < 51)
+            return null;
+
+        byte[] time = {p_respDatas[0], p_respDatas[1], p_respDatas[2], p_respDatas[3],
+                p_respDatas[4], p_respDatas[5], p_respDatas[6], p_respDatas[7]};
+        int queryType = p_respDatas[8];
+        byte[] queryCode = {p_respDatas[9], p_respDatas[10], p_respDatas[11], p_respDatas[12],
+                p_respDatas[13], p_respDatas[14], p_respDatas[15], p_respDatas[16],
+                p_respDatas[17], p_respDatas[18]};
+        int mtTlMsg = CmppUtil.byte2int(p_respDatas[19], p_respDatas[20], p_respDatas[21], p_respDatas[22]);
+        int mtTlUsr = CmppUtil.byte2int(p_respDatas[23], p_respDatas[24], p_respDatas[25], p_respDatas[26]);
+        int mtScs = CmppUtil.byte2int(p_respDatas[27], p_respDatas[28], p_respDatas[29], p_respDatas[30]);
+        int mtWt = CmppUtil.byte2int(p_respDatas[31], p_respDatas[32], p_respDatas[33], p_respDatas[34]);
+        int mtFl = CmppUtil.byte2int(p_respDatas[35], p_respDatas[36], p_respDatas[37], p_respDatas[38]);
+        int moScs = CmppUtil.byte2int(p_respDatas[39], p_respDatas[40], p_respDatas[41], p_respDatas[42]);
+        int moWt = CmppUtil.byte2int(p_respDatas[43], p_respDatas[44], p_respDatas[45], p_respDatas[46]);
+        int moFl = CmppUtil.byte2int(p_respDatas[47], p_respDatas[48], p_respDatas[49], p_respDatas[50]);
+
+        l_mapRet.put("seq", p_iSeq);
+        l_mapRet.put("time", time);
+        l_mapRet.put("queryType", queryType);
+        l_mapRet.put("queryCode", queryCode);
+        l_mapRet.put("mtTlMsg", mtTlMsg);
+        l_mapRet.put("mtTlUsr", mtTlUsr);
+        l_mapRet.put("mtScs", mtScs);
+        l_mapRet.put("mtWt", mtWt);
+        l_mapRet.put("mtFl", mtFl);
+        l_mapRet.put("moScs", moScs);
+        l_mapRet.put("moWt", moWt);
+        l_mapRet.put("moFl", moFl);
+
+        return l_mapRet;
+    }
+
+    Map<String,Object> readCmppActiveTestResp(int p_iSeq, byte[] p_respDatas) {
+        Map<String,Object> l_mapRet = new HashMap<>();
+
+        if (p_respDatas.length < 1)
+            return null;
+
+        byte[] reserved = {p_respDatas[12]};
+
+        l_mapRet.put("seq", p_iSeq);
+        l_mapRet.put("reserved", reserved);
 
         return l_mapRet;
     }
