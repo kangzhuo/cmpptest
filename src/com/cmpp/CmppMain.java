@@ -11,6 +11,7 @@ import java.util.concurrent.ConcurrentHashMap;
  * Created by kangbo on 2016/11/29.
  */
 public class CmppMain {
+    private GetProperties config = new GetProperties();
     private static int g_iSeq = 1000;
     private static Map<Integer,Object> g_mapSeq = new ConcurrentHashMap<>();
     private static Map<Object,Object> g_mapMsgId = new ConcurrentHashMap<>();
@@ -27,6 +28,12 @@ public class CmppMain {
         CmppPackData cmppPackData = new CmppPackData();
         int l_iSeq = getSeq();
         CmppMain.g_mapSeq.put(l_iSeq, p_strDoneCode);
+
+        if (CmppMain.g_mapSeq.size() >= (config.winSize * config.maxSocket)) {
+            logger.info("等待窗口小于限制数值");
+            Thread.sleep(100);
+        }
+
         return CmppSocketClient.sendAndRetSocket(cmppPackData.makeCmppSubmitReq(l_iSeq, p_strTel, p_iType, p_strMsg));
     }
 
@@ -75,7 +82,7 @@ public class CmppMain {
         }
         List<Byte> msgId = CmppUtil.bytes2List((byte[])p_mapResp.get("msgId"));
         CmppMain.g_mapMsgId.put(msgId, CmppMain.g_mapSeq.get(l_iSeq).toString());
-
+        CmppMain.g_mapSeq.remove(l_iSeq);
 
     }
 
@@ -87,6 +94,7 @@ public class CmppMain {
             return;
         }
         String l_DoneCode = CmppMain.g_mapMsgId.get(msgId).toString(); //获取提交短信时的业务流水号
+        CmppMain.g_mapMsgId.remove(msgId);
         String stat = new String((byte[]) p_mapResp.get("stat"));
 
         if (stat.equals("DELIVRD")) {

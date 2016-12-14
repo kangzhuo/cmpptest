@@ -15,6 +15,7 @@ class GetProperties {
     int timeOut = 1;
     int sendRetry = 3;
     int recvRetry = 10;
+    int winSize = 10;
 
     String sourceAddr = "QQ1107";
     String spId = "911337";
@@ -58,6 +59,8 @@ class GetProperties {
                     sendRetry = Integer.parseInt(prop.getProperty("sendRetry"));
                 if(prop.containsKey("recvRetry"))
                     recvRetry = Integer.parseInt(prop.getProperty("recvRetry"));
+                if(prop.containsKey("winSize"))
+                    winSize = Integer.parseInt(prop.getProperty("winSize"));
                 if(prop.containsKey("sourceAddr"))
                     sourceAddr = prop.getProperty("sourceAddr");
                 if(prop.containsKey("spId"))
