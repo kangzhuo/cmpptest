@@ -86,7 +86,7 @@ public class CmppMain {
 
     }
 
-    //实现单条短信状态反馈，如果是超级短信，短信收到并不一定展示需要以服务起访问为准
+    //实现单条短信状态反馈，如果是超级短信，短信收到并不一定展示需要以服务起访问为准，但是在网关已经计费了，钱还需要收
     private void dealDeliver(Map<String,Object> p_mapResp) {
         List<Byte> msgId = CmppUtil.bytes2List((byte[])p_mapResp.get("msgId"));
         if (!CmppMain.g_mapMsgId.containsKey(msgId)) {
