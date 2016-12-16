@@ -19,7 +19,10 @@ public class CmppMain {
     private static Logger logger = Logger.getLogger(CmppMain.class);
 
     private synchronized static int getSeq() {
+        if(999999999 == g_iSeq)
+            g_iSeq = 1000;
         g_iSeq = g_iSeq + 1;
+
         return g_iSeq;
     }
 
