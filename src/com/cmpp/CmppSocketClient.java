@@ -244,10 +244,10 @@ class CmppSocketClient {
                     ////////////////////////////////////////////////////////////////////////////////
                     cmppMain.deliverSms(l_read, commandId, seq, l_readBody);
                     ////////////////////////////////////////////////////////////////////////////////
-                    sleep(100);
+                    /*sleep(100);
                 } catch (InterruptedException e) {
                     logger.info("守护线程【" + g_iNum + "】终止。");
-                    g_isInterrupted = true;
+                    g_isInterrupted = true;*/
                 } catch (SocketTimeoutException e) {
                     //logger.info("守护线程【" + g_iNum + "】超时读取，做第" + g_iRetry + "次超时处理。"); //测试时服务端发送心跳就断开链接，发送心跳回执不断链接，这里不做重试判断当超时就发心跳
                     logger.info("守护线程【" + g_iNum + "】超时读取，发送心跳");

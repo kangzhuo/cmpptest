@@ -1,10 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="ChangeListManager">
-    <list default="true" id="24ec01ad-5f31-4cfd-b87b-5aec97f7c6f4" name="Default" comment="">
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/com/cmpp/CmppMain.java" afterPath="$PROJECT_DIR$/src/com/cmpp/CmppMain.java" />
-    </list>
+    <list default="true" id="24ec01ad-5f31-4cfd-b87b-5aec97f7c6f4" name="Default" comment="" />
     <ignored path="$PROJECT_DIR$/out/" />
     <ignored path=".idea/dataSources.local.xml" />
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
@@ -33,11 +30,11 @@
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="SmsTest.java" pinned="false" current-in-tab="false">
+      <file leaf-file-name="SmsTest.java" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/src/com/test/SmsTest.java">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="120">
-              <caret line="9" column="45" lean-forward="false" selection-start-line="9" selection-start-column="45" selection-end-line="9" selection-end-column="45" />
+            <state relative-caret-position="137">
+              <caret line="10" column="8" lean-forward="false" selection-start-line="10" selection-start-column="8" selection-end-line="10" selection-end-column="8" />
               <folding>
                 <element signature="imports" expanded="true" />
               </folding>
@@ -67,11 +64,11 @@
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="CmppMain.java" pinned="false" current-in-tab="true">
+      <file leaf-file-name="CmppMain.java" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/src/com/cmpp/CmppMain.java">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="165">
-              <caret line="21" column="20" lean-forward="false" selection-start-line="21" selection-start-column="11" selection-end-line="21" selection-end-column="20" />
+            <state relative-caret-position="1470">
+              <caret line="98" column="86" lean-forward="true" selection-start-line="0" selection-start-column="0" selection-end-line="131" selection-end-column="0" />
               <folding>
                 <element signature="imports" expanded="true" />
               </folding>
@@ -192,8 +189,8 @@
         <option value="$PROJECT_DIR$/src/com/cmpp/CmppSocketClient.java" />
         <option value="$PROJECT_DIR$/a.properties" />
         <option value="$PROJECT_DIR$/src/com/cmpp/GetProperties.java" />
-        <option value="$PROJECT_DIR$/src/com/test/SmsTest.java" />
         <option value="$PROJECT_DIR$/src/com/cmpp/CmppMain.java" />
+        <option value="$PROJECT_DIR$/src/com/test/SmsTest.java" />
       </list>
     </option>
   </component>
@@ -260,6 +257,28 @@
             </PATH_ELEMENT>
             <PATH_ELEMENT>
               <option name="myItemId" value="cmpptest" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
+            </PATH_ELEMENT>
+          </PATH>
+          <PATH>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="cmpptest" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.ProjectViewProjectNode" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="cmpptest" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="src" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="com" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="test" />
               <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
             </PATH_ELEMENT>
           </PATH>
@@ -953,12 +972,12 @@
       <workItem from="1481704093987" duration="1876000" />
       <workItem from="1481786280863" duration="1400000" />
       <workItem from="1481788580987" duration="201000" />
-      <workItem from="1481857616952" duration="1484000" />
+      <workItem from="1481857616952" duration="2392000" />
     </task>
     <servers />
   </component>
   <component name="TimeTrackingManager">
-    <option name="totallyTimeSpent" value="163768000" />
+    <option name="totallyTimeSpent" value="164676000" />
   </component>
   <component name="TodoView">
     <todo-panel id="selected-file">
@@ -1333,6 +1352,10 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="63">
           <caret line="867" column="11" lean-forward="false" selection-start-line="867" selection-start-column="11" selection-end-line="867" selection-end-column="11" />
+          <folding>
+            <element signature="e#33317#33318#0" expanded="false" />
+            <element signature="e#33411#33412#0" expanded="false" />
+          </folding>
         </state>
       </provider>
     </entry>
@@ -1380,6 +1403,7 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="135">
           <caret line="396" column="28" lean-forward="false" selection-start-line="396" selection-start-column="28" selection-end-line="396" selection-end-column="28" />
+          <folding />
         </state>
       </provider>
     </entry>
@@ -1422,16 +1446,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/src/com/test/SmsTest.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="120">
-          <caret line="9" column="45" lean-forward="false" selection-start-line="9" selection-start-column="45" selection-end-line="9" selection-end-column="45" />
-          <folding>
-            <element signature="imports" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/src/com/cmpp/CmppSocketClient.java">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="3690">
@@ -1460,8 +1474,18 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/src/com/cmpp/CmppMain.java">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="165">
-          <caret line="21" column="20" lean-forward="false" selection-start-line="21" selection-start-column="11" selection-end-line="21" selection-end-column="20" />
+        <state relative-caret-position="1470">
+          <caret line="98" column="86" lean-forward="true" selection-start-line="0" selection-start-column="0" selection-end-line="131" selection-end-column="0" />
+          <folding>
+            <element signature="imports" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/com/test/SmsTest.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="137">
+          <caret line="10" column="8" lean-forward="false" selection-start-line="10" selection-start-column="8" selection-end-line="10" selection-end-column="8" />
           <folding>
             <element signature="imports" expanded="true" />
           </folding>
