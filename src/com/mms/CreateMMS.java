@@ -1,12 +1,14 @@
 package com.mms;
 
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.text.SimpleDateFormat;
-import java.util.Date;
+import java.io.*;
+import java.net.HttpURLConnection;
+import java.net.URL;
+import java.security.MessageDigest;
 import java.util.HashMap;
 import java.util.Map;
+
+import ch.ethz.ssh2.Connection;
+import ch.ethz.ssh2.SCPClient;
 
 /**
  * Created by kangbo on 2016/11/28.
@@ -14,28 +16,22 @@ import java.util.Map;
 public class CreateMMS {
 
     private FileOutputStream g_fos = null;
-    private Date g_now;
 
-    public int create (String p_strFileName, String p_strXml, Map<String,String> p_mapParam, String p_strFrom, String p_strTime) throws Exception{
+    public int create (String p_strFileName, String p_strSign, String p_strXml, Map<String,String> p_mapParam, String p_strFrom) throws Exception{
         g_fos = new FileOutputStream(p_strFileName);
 
         if (p_strFrom == null || p_strFrom.length() == 0) {
-            p_strFrom = "106575261107";
+            p_strFrom = "106575261107666";
         }
 
-        if (p_strTime == null || p_strTime.length() == 0) {
-            g_now = new Date();
-            SimpleDateFormat df = new SimpleDateFormat("MMddHHmmss");
-            p_strTime = df.format(g_now);
-        }
-
-        writeHead(p_strFrom, p_strTime);
+        writeHead(p_strSign, p_strFrom);
 
         g_fos.write((byte)(p_mapParam.size() + 1));
 
         writeXML(p_strXml);
 
         for (Map.Entry<String, String> entry : p_mapParam.entrySet()) {
+            System.out.println("Key = " + entry.getKey() + ", Value = " + entry.getValue());
             if (entry.getKey().contains("TEXT")) {
                 writeText(entry.getKey().replace("TEXT|",""), entry.getValue());
             } else if (entry.getKey().contains("IMAGE")) {
@@ -43,42 +39,47 @@ public class CreateMMS {
             } else if (entry.getKey().contains("VIDEO")) {
                 writeVideo(entry.getKey().replace("VIDEO|",""), entry.getValue());
             }
-            System.out.println("Key = " + entry.getKey() + ", Value = " + entry.getValue());
-
         }
 
         g_fos.flush();
         g_fos.close();
+
+        scpFile("121.40.149.142", 22, "root", p_strFileName, "/data/mms");
+
         return 0;
     }
 
-    private void writeHead(String p_strFrom, String p_strTime) throws IOException{
+    private void writeHead(String p_strSign, String p_strFrom) throws IOException{
         byte[] message = {(byte)0x8C, (byte)0x84, //message-type: m-send-conf = 0x81 m-notification-ind = 0x82 m-notifyresp-ind = 0x83 m-retrieve-conf = 0x84 m-acknowledge-ind = 0x85 m-delivery-ind = 0x86 m-read-rec-ind = 0x87 m-read-orig-ind = 0x88 m-forward-req = 0x89 m-forward-conf = 0x90
                 (byte)0x8D, (byte)0x90,  //mms-version
                 (byte)0x8A, (byte)0x80, //message-class: Personal = 0x80 Advertisement = 0x81
                 (byte)0x8F, (byte)0x81, (byte)0x86, (byte)0x80, (byte)0x90, (byte)0x80,  //unknow
-                (byte)0x98, (byte)0x33, (byte)0x36, (byte)0x35, (byte)0x38, (byte)0x32, (byte)0x34, (byte)0x00,  //X-Mms-Transaction-ID byte[] mesg_tran = {(byte)0x98, (byte)0x65, (byte)0x30, (byte)0x62, (byte)0x66, (byte)0x64, (byte)0x30, (byte)65, (byte)0x37, (byte)0x2D, (byte)0x65, (byte)0x64, (byte)0x37, (byte)0x33, (byte)0x2D, (byte)0x34, (byte)0x63, (byte)0x65, (byte)0x61, (byte)0x2D, (byte)0x39, (byte)0x64, (byte)0x64, (byte)0x38, (byte)0x2D, (byte)0x32, (byte)0x30, (byte)0x33, (byte)0x65, (byte)0x63, (byte)0x63, (byte)0x61, (byte)0x62, (byte)0x32, (byte)0x35, (byte)0x31, (byte)0x32, (byte)0x2D, (byte)0x31, (byte)0x31, (byte)0x31, (byte)0x39, (byte)0x31, (byte)0x30, (byte)0x30, (byte)0x34, (byte)0x33, (byte)0x33, (byte)0x00};
-                (byte)0x8B}; //message-id
+                (byte)0x98, (byte)0x33, (byte)0x36, (byte)0x35, (byte)0x38, (byte)0x32, (byte)0x34, (byte)0x00};  //X-Mms-Transaction-ID byte[] mesg_tran = {(byte)0x98, (byte)0x65, (byte)0x30, (byte)0x62, (byte)0x66, (byte)0x64, (byte)0x30, (byte)65, (byte)0x37, (byte)0x2D, (byte)0x65, (byte)0x64, (byte)0x37, (byte)0x33, (byte)0x2D, (byte)0x34, (byte)0x63, (byte)0x65, (byte)0x61, (byte)0x2D, (byte)0x39, (byte)0x64, (byte)0x64, (byte)0x38, (byte)0x2D, (byte)0x32, (byte)0x30, (byte)0x33, (byte)0x65, (byte)0x63, (byte)0x63, (byte)0x61, (byte)0x62, (byte)0x32, (byte)0x35, (byte)0x31, (byte)0x32, (byte)0x2D, (byte)0x31, (byte)0x31, (byte)0x31, (byte)0x39, (byte)0x31, (byte)0x30, (byte)0x30, (byte)0x34, (byte)0x33, (byte)0x33, (byte)0x00};
 
-        byte[] message_id_date = {(byte)0x46, (byte)0x34, (byte)0x6B, (byte)0x4A, (byte)0x76, (byte)0x66, (byte)0x48, (byte)0x45, (byte)0x62, (byte)0x67, (byte)0x79, (byte)0x7A, (byte)0x00, //message-id-other
-                //(byte)0x85, (byte)0x04 //date
-                };
-
+        byte[] message_id = {(byte)0x8B, (byte)0x46, (byte)0x34, (byte)0x6B, (byte)0x4A, (byte)0x76, (byte)0x66, (byte)0x48, (byte)0x45, (byte)0x62, (byte)0x67, (byte)0x79, (byte)0x7A, (byte)0x00};
+        byte[] message_date = {(byte)0x85, (byte)0x00}; //date 0x85 0x04 - - - -
         byte[] message_from = {(byte)0x89, (byte)0x0C, (byte)0x80}; //(byte)0x31, (byte)0x30, (byte)0x36, (byte)0x35, (byte)0x37, (byte)0x35, (byte)0x32, (byte)0x36, (byte)0x31, (byte)0x31, (byte)0x30, (byte)0x37,
-
-        byte[] message_to_subject_type = {(byte)0x00, //from-other
-                //(byte)0x97, (byte)0x2B, (byte)0x30, (byte)0x30, (byte)0x30, (byte)0x30, (byte)0x30, (byte)0x30, (byte)0x30, (byte)0x30, (byte)0x30, (byte)0x30, (byte)0x2F, (byte)0x54, (byte)0x59, (byte)0x50, (byte)0x45, (byte)0x3D, (byte)0x50, (byte)0x4C, (byte)0x4D, (byte)0x4E, (byte)0x00, //to +0000000000/TYPE=PLMN
-                (byte)0x96, (byte)0x0E, (byte)0xEA, (byte)0xE4, (byte)0xBF, (byte)0xA1, (byte)0xE6, (byte)0x81, (byte)0xAF, (byte)0xE6, (byte)0x8E, (byte)0xA8, (byte)0xE9, (byte)0x80, (byte)0x81, (byte)0x00,
-                (byte)0x84, (byte)0x1D, (byte)0xB3, (byte)0x8A, (byte)0x6D, (byte)0x6D, (byte)0x73, (byte)0x2E, (byte)0x73, (byte)0x6D, (byte)0x69, (byte)0x6C, (byte)0x00,
+        byte[] message_from_end = {(byte)0x00};
+        byte[] messaget_to = {(byte)0x97, (byte)0x2B, (byte)0x30, (byte)0x30, (byte)0x30, (byte)0x30, (byte)0x30, (byte)0x30, (byte)0x30, (byte)0x30, (byte)0x30, (byte)0x30, (byte)0x2F, (byte)0x54, (byte)0x59, (byte)0x50, (byte)0x45, (byte)0x3D, (byte)0x50, (byte)0x4C, (byte)0x4D, (byte)0x4E, (byte)0x00}; //to +0000000000/TYPE=PLMN
+        byte[] message_subject = {(byte)0x96}; //(byte)0x96, (byte)0x0E, (byte)0xEA, (byte)0xE4, (byte)0xBF, (byte)0xA1, (byte)0xE6, (byte)0x81, (byte)0xAF, (byte)0xE6, (byte)0x8E, (byte)0xA8, (byte)0xE9, (byte)0x80, (byte)0x81, (byte)0x00
+        byte[] message_subject_ea = {(byte)0xEA};
+        byte[] message_subject_end = {(byte)0x00};
+        byte[] message_type = {(byte)0x84, (byte)0x1D, (byte)0xB3, (byte)0x8A, (byte)0x6D, (byte)0x6D, (byte)0x73, (byte)0x2E, (byte)0x73, (byte)0x6D, (byte)0x69, (byte)0x6C, (byte)0x00,
                 (byte)0x89, (byte)0x61, (byte)0x70, (byte)0x70, (byte)0x6C, (byte)0x69, (byte)0x63, (byte)0x61, (byte)0x74, (byte)0x69, (byte)0x6F, (byte)0x6E, (byte)0x2F, (byte)0x73, (byte)0x6D, (byte)0x69, (byte)0x6C, (byte)0x00};
 
         g_fos.write(message);
-        g_fos.write(p_strTime.getBytes());
-        g_fos.write(message_id_date);
+        g_fos.write(message_id);
+        g_fos.write(message_date);
         //g_fos.write(longToByteArray(System.currentTimeMillis()/1000 ));
         g_fos.write(message_from);
         g_fos.write(p_strFrom.getBytes());
-        g_fos.write(message_to_subject_type);
+        g_fos.write(message_from_end);
+        g_fos.write(message_subject);
+        g_fos.write((byte) (p_strSign.getBytes().length + 2));
+        g_fos.write(message_subject_ea);
+        g_fos.write(p_strSign.getBytes());
+        g_fos.write(message_subject_end);
+        g_fos.write(message_type);
     }
 
     private void writeXML(String p_strXml) throws IOException{
@@ -111,13 +112,15 @@ public class CreateMMS {
     }
 
     private void writeImage(String p_strName, String p_strImage) throws IOException{
+        String l_strLocalPath = "/tmp/" + md5(p_strImage);
+        downloadFile(p_strImage, l_strLocalPath);
         byte[] xmlHead_1 = {(byte)0x69, (byte)0x6D, (byte)0x61, (byte)0x67, (byte)0x65, (byte)0x2F, (byte)0x6A, (byte)0x70, (byte)0x65, (byte)0x67, (byte)0x00, (byte)0xC0};
         byte[] xmlHead_2 = {(byte)0x00, (byte)0x8E};
         byte[] xmlHead_3 = {(byte)0x00};
 
         int l_iHeadSize = 12 + 2 + 1 + p_strName.getBytes().length + p_strName.getBytes().length;
 
-        FileInputStream l_fis= new FileInputStream(p_strImage);
+        FileInputStream l_fis= new FileInputStream(l_strLocalPath);
         g_fos.write((byte)l_iHeadSize);
         g_fos.write(encodeUintvar(l_fis.available()));
         g_fos.write(xmlHead_1);
@@ -132,13 +135,15 @@ public class CreateMMS {
     }
 
     private void writeVideo(String p_strName, String p_strVideo) throws IOException{
+        String l_strLocalPath = "/tmp/" + md5(p_strVideo);
+        downloadFile(p_strVideo, l_strLocalPath);
         byte[] xmlHead_1 = {(byte)0x76, (byte)0x69, (byte)0x64, (byte)0x65, (byte)0x6F, (byte)0x2F, (byte)0x6D, (byte)0x70, (byte)0x34, (byte)0x00, (byte)0xC0};
         byte[] xmlHead_2 = {(byte)0x00, (byte)0x8E};
         byte[] xmlHead_3 = {(byte)0x00};
 
         int l_iHeadSize = 11 + 2 + 1 + p_strName.getBytes().length + p_strName.getBytes().length;
 
-        FileInputStream l_fis= new FileInputStream(p_strVideo);
+        FileInputStream l_fis= new FileInputStream(l_strLocalPath);
         g_fos.write((byte)l_iHeadSize);
         g_fos.write(encodeUintvar(l_fis.available()));
         g_fos.write(xmlHead_1);
@@ -175,14 +180,75 @@ public class CreateMMS {
         return l_retBytes;
     }
 
-    /*private byte[] longToByteArray(long s) {
+    private byte[] longToByteArray(long s) {
         byte[] targets = new byte[4];
         for (int i = 0; i < targets.length; i++) {
             int offset = (targets.length - 1 - i) * 8;
             targets[i] = (byte) ((s >>> offset) & 0xff);
         }
         return targets;
-    }*/
+    }
+
+    private String md5(String str1) {
+        try {
+            byte[] buffer = str1.getBytes();
+            String s;
+            char hexDigist[] = {'0','1','2','3','4','5','6','7','8','9','a','b','c','d','e','f'};
+            MessageDigest md = MessageDigest.getInstance("MD5");
+            md.update(buffer);
+            byte[] datas;
+            datas = md.digest(); //16个字节的长整数
+            char[] str = new char[2*16];
+            int k = 0;
+            for(int i=0;i<16;i++){
+                byte b   = datas[i];
+                str[k++] = hexDigist[b>>>4 & 0xf];//高4位
+                str[k++] = hexDigist[b & 0xf];//低4位
+            }
+            s = new String(str);
+            return s;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
+
+    private void downloadFile(String remoteFilePath, String localFilePath) throws IOException
+    {
+        URL urlfile;
+        HttpURLConnection httpUrl;
+        BufferedInputStream bis;
+        BufferedOutputStream bos;
+        File f = new File(localFilePath);
+
+        urlfile = new URL(remoteFilePath);
+        httpUrl = (HttpURLConnection)urlfile.openConnection();
+        httpUrl.connect();
+        bis = new BufferedInputStream(httpUrl.getInputStream());
+        bos = new BufferedOutputStream(new FileOutputStream(f));
+        int len = 2048;
+        byte[] b = new byte[len];
+        while ((len = bis.read(b)) != -1)
+        {
+            bos.write(b, 0, len);
+        }
+        bos.flush();
+        bis.close();
+        httpUrl.disconnect();
+    }
+
+    private void scpFile(String p_strIp, int p_iPort, String p_strUser, String p_strLocalFile, String p_strRempteFile) throws IOException
+    {
+        Connection con = new Connection(p_strIp, p_iPort);
+        con.connect();
+        String userHome = System.getProperty("user.home");
+        if (con.authenticateWithPublicKey(p_strUser, new File(userHome + "/.ssh/id_rsa"), "")) {
+            SCPClient scpClient = con.createSCPClient();
+            scpClient.put(p_strLocalFile, p_strRempteFile);
+        } else {
+            throw new IOException("不能打开链接");
+        }
+    }
 
     public static void main (String[] args) {
         try {
@@ -206,10 +272,10 @@ public class CreateMMS {
                     "</body>" +
                 "</smil>";
             Map<String,String> l_mapParam = new HashMap<>();
-            l_mapParam.put("TEXT|t04.txt", "西溪诚园");
-            l_mapParam.put("VIDEO|12.mp4", "/Users/kangbo/Downloads/xxcy4.mp4");
+            l_mapParam.put("TEXT|t04.txt", "中国移动·通信开放平台");
+            //l_mapParam.put("VIDEO|12.mp4", "http://sms-agent.b0.upaiyun.com//sms_agent_temp/1/5857b382b707a.mp4");
 
-            createMMS.create ("/Users/kangbo/work/cmpptest/kbtest.mms", l_strXml, l_mapParam, null, null);
+            createMMS.create ("kbscp1.mms", "三体科技", l_strXml, l_mapParam, null);
         } catch (Exception e) {
             System.out.println(e.getMessage());
         }
