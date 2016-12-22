@@ -354,8 +354,12 @@ class CmppPackData {
     }
 
     private byte[] makeMMSBody(String p_strTel, String p_strMsg) throws IOException {
-        String l_strSendMsg = p_strMsg.contains("?") ? (p_strMsg + "&abc=" + p_strTel) : (p_strMsg + "?abc=" + p_strTel);
-
+        StringBuilder l_strSendMsg = new StringBuilder ();
+        if (p_strMsg.contains("?")) {
+            l_strSendMsg.append("&abc=").append(p_strTel);
+        }else {
+            l_strSendMsg.append("?abc=").append(p_strTel);
+        }
         byte wdp_HeaderLength = (byte)0x06;
         byte wdp_PortNumbers = (byte)0x05;
         byte wdp_IELength = (byte)0x04;
@@ -384,7 +388,7 @@ class CmppPackData {
         byte[] x_mms_message_size = new byte[] {(byte)0x8E, (byte)0x03, (byte)0x01, (byte)0x6e, (byte)0xad};
         byte[] x_mms_expiry = new byte[] {(byte)0x88, (byte)0x05, (byte)0x81, (byte)0x03, (byte)0x00, (byte)0x05, (byte)0x00};
         byte[] x_mms_content_location = new byte[] {(byte)0x83};
-        byte[] x_mms_url = CmppUtil.str2Byte(l_strSendMsg, l_strSendMsg.length());
+        byte[] x_mms_url = CmppUtil.str2Byte(l_strSendMsg.toString(), l_strSendMsg.length());
         byte[] x_mms_end = new byte[] {(byte)0x00};
 
         ByteArrayOutputStream bos = new ByteArrayOutputStream();

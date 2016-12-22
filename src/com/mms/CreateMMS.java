@@ -32,12 +32,12 @@ public class CreateMMS {
 
         for (Map.Entry<String, String> entry : p_mapParam.entrySet()) {
             System.out.println("Key = " + entry.getKey() + ", Value = " + entry.getValue());
-            if (entry.getKey().contains("TEXT")) {
-                writeText(entry.getKey().replace("TEXT|",""), entry.getValue());
-            } else if (entry.getKey().contains("IMAGE")) {
-                writeImage(entry.getKey().replace("IMAGE|",""), entry.getValue());
-            } else if (entry.getKey().contains("VIDEO")) {
-                writeVideo(entry.getKey().replace("VIDEO|",""), entry.getValue());
+            if (entry.getKey().contains(".txt")) {
+                writeText(entry.getKey(), entry.getValue());
+            } else if (entry.getKey().contains(".jpg") || entry.getKey().contains(".jpeg") || entry.getKey().contains(".gif")) {
+                writeImage(entry.getKey(), entry.getValue());
+            } else if (entry.getKey().contains(".mp4")) {
+                writeVideo(entry.getKey(), entry.getValue());
             }
         }
 
@@ -244,7 +244,7 @@ public class CreateMMS {
         String userHome = System.getProperty("user.home");
         if (con.authenticateWithPublicKey(p_strUser, new File(userHome + "/.ssh/id_rsa"), "")) {
             SCPClient scpClient = con.createSCPClient();
-            scpClient.put(p_strLocalFile, p_strRempteFile);
+            scpClient.put(p_strLocalFile, p_strRempteFile, "0644");
         } else {
             throw new IOException("不能打开链接");
         }
@@ -272,10 +272,10 @@ public class CreateMMS {
                     "</body>" +
                 "</smil>";
             Map<String,String> l_mapParam = new HashMap<>();
-            l_mapParam.put("TEXT|t04.txt", "中国移动·通信开放平台");
-            //l_mapParam.put("VIDEO|12.mp4", "http://sms-agent.b0.upaiyun.com//sms_agent_temp/1/5857b382b707a.mp4");
+            l_mapParam.put("t04.txt", "中国移动·通信开放平台");
+            l_mapParam.put("12.jpeg", "http://sms-agent.b0.upaiyun.com/sms_agent_temp/1/5857b368887d4.jpeg");
 
-            createMMS.create ("kbscp1.mms", "三体科技", l_strXml, l_mapParam, null);
+            createMMS.create ("kbscp3.mms", "三体科技", l_strXml, l_mapParam, null);
         } catch (Exception e) {
             System.out.println(e.getMessage());
         }
