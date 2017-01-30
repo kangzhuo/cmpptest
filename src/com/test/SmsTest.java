@@ -12,10 +12,7 @@ public class SmsTest {
         try {
             BasicConfigurator.configure();
 
-            cmppMain.submitSms("123", "15858278946", "测试短信http://mms.llqianbao.com/kbtest.mms", 1);
-            Thread.sleep(10000);
-
-            cmppMain.submitSms("123", "18858100583", "测试短信http://mms.llqianbao.com/kbtest.mms", 1);
+            cmppMain.submitSms("123", "18858100583", "http://mms.llqianbao.com/llg/llg1458227685289903.mms", 1);
 
             Thread.sleep(10000000);
         } catch (Exception e) {

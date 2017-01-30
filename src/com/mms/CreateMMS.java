@@ -51,10 +51,9 @@ public class CreateMMS {
 
     private void writeHead(String p_strSign, String p_strFrom) throws IOException{
         byte[] message = {(byte)0x8C, (byte)0x84, //message-type: m-send-conf = 0x81 m-notification-ind = 0x82 m-notifyresp-ind = 0x83 m-retrieve-conf = 0x84 m-acknowledge-ind = 0x85 m-delivery-ind = 0x86 m-read-rec-ind = 0x87 m-read-orig-ind = 0x88 m-forward-req = 0x89 m-forward-conf = 0x90
-                (byte)0x8D, (byte)0x90,  //mms-version
-                (byte)0x8A, (byte)0x80, //message-class: Personal = 0x80 Advertisement = 0x81
-                (byte)0x8F, (byte)0x81, (byte)0x86, (byte)0x80, (byte)0x90, (byte)0x80,  //unknow
-                (byte)0x98, (byte)0x33, (byte)0x36, (byte)0x35, (byte)0x38, (byte)0x32, (byte)0x34, (byte)0x00};  //X-Mms-Transaction-ID byte[] mesg_tran = {(byte)0x98, (byte)0x65, (byte)0x30, (byte)0x62, (byte)0x66, (byte)0x64, (byte)0x30, (byte)65, (byte)0x37, (byte)0x2D, (byte)0x65, (byte)0x64, (byte)0x37, (byte)0x33, (byte)0x2D, (byte)0x34, (byte)0x63, (byte)0x65, (byte)0x61, (byte)0x2D, (byte)0x39, (byte)0x64, (byte)0x64, (byte)0x38, (byte)0x2D, (byte)0x32, (byte)0x30, (byte)0x33, (byte)0x65, (byte)0x63, (byte)0x63, (byte)0x61, (byte)0x62, (byte)0x32, (byte)0x35, (byte)0x31, (byte)0x32, (byte)0x2D, (byte)0x31, (byte)0x31, (byte)0x31, (byte)0x39, (byte)0x31, (byte)0x30, (byte)0x30, (byte)0x34, (byte)0x33, (byte)0x33, (byte)0x00};
+                (byte)0x98, (byte)0x35, (byte)0x38, (byte)0x36, (byte)0x36, (byte)0x00,  //X-Mms-Transaction-ID byte[] mesg_tran = {(byte)0x98, (byte)0x65, (byte)0x30, (byte)0x62, (byte)0x66, (byte)0x64, (byte)0x30, (byte)65, (byte)0x37, (byte)0x2D, (byte)0x65, (byte)0x64, (byte)0x37, (byte)0x33, (byte)0x2D, (byte)0x34, (byte)0x63, (byte)0x65, (byte)0x61, (byte)0x2D, (byte)0x39, (byte)0x64, (byte)0x64, (byte)0x38, (byte)0x2D, (byte)0x32, (byte)0x30, (byte)0x33, (byte)0x65, (byte)0x63, (byte)0x63, (byte)0x61, (byte)0x62, (byte)0x32, (byte)0x35, (byte)0x31, (byte)0x32, (byte)0x2D, (byte)0x31, (byte)0x31, (byte)0x31, (byte)0x39, (byte)0x31, (byte)0x30, (byte)0x30, (byte)0x34, (byte)0x33, (byte)0x33, (byte)0x00};
+                (byte)0x8D, (byte)0x90  //mms-version
+        };
 
         byte[] message_id = {(byte)0x8B, (byte)0x46, (byte)0x34, (byte)0x6B, (byte)0x4A, (byte)0x76, (byte)0x66, (byte)0x48, (byte)0x45, (byte)0x62, (byte)0x67, (byte)0x79, (byte)0x7A, (byte)0x00};
         byte[] message_date = {(byte)0x85, (byte)0x00}; //date 0x85 0x04 - - - -
@@ -64,8 +63,7 @@ public class CreateMMS {
         byte[] message_subject = {(byte)0x96}; //(byte)0x96, (byte)0x0E, (byte)0xEA, (byte)0xE4, (byte)0xBF, (byte)0xA1, (byte)0xE6, (byte)0x81, (byte)0xAF, (byte)0xE6, (byte)0x8E, (byte)0xA8, (byte)0xE9, (byte)0x80, (byte)0x81, (byte)0x00
         byte[] message_subject_ea = {(byte)0xEA};
         byte[] message_subject_end = {(byte)0x00};
-        byte[] message_type = {(byte)0x84, (byte)0x1D, (byte)0xB3, (byte)0x8A, (byte)0x6D, (byte)0x6D, (byte)0x73, (byte)0x2E, (byte)0x73, (byte)0x6D, (byte)0x69, (byte)0x6C, (byte)0x00,
-                (byte)0x89, (byte)0x61, (byte)0x70, (byte)0x70, (byte)0x6C, (byte)0x69, (byte)0x63, (byte)0x61, (byte)0x74, (byte)0x69, (byte)0x6F, (byte)0x6E, (byte)0x2F, (byte)0x73, (byte)0x6D, (byte)0x69, (byte)0x6C, (byte)0x00};
+        byte[] message_type = {(byte)0x84, (byte)0xB3};
 
         g_fos.write(message);
         g_fos.write(message_id);
@@ -258,8 +256,8 @@ public class CreateMMS {
                     "<head>" +
                         "<layout>" +
                             "<root-layout height=\"640\" width=\"480\" />" +
-                            "<region id=\"Image\" top=\"0\" left=\"0\" height=\"334\" width=\"400\" fit=\"meet\"/>" +
-                            "<region id=\"Text\" top=\"334\" left=\"0\" height=\"306\" width=\"400\" fit=\"meet\"/>" +
+                            "<region id=\"Image\" top=\"0\" left=\"0\" height=\"1\" width=\"1\" fit=\"hidden\"/>" +
+                            "<region id=\"Text\" top=\"334\" left=\"0\" height=\"306\" width=\"400\" fit=\"hidden\"/>" +
                         "</layout>" +
                     "</head>" +
                     "<body>" +
@@ -267,15 +265,27 @@ public class CreateMMS {
                             "<text region=\"Text\" src=\"t04.txt\"/>" +
                         "</par>" +
                         "<par dur=\"120000ms\">" +
+                            //"<text region=\"Text\" src=\"t05.txt\"/>" +
+                            //"<text region=\"Text\" src=\"t06.txt\"/>" +
+                            //"<img region=\"Image\" src=\"11.jpg\"/>" +
                             "<video src=\"12.mp4\"/>" +
                         "</par>" +
                     "</body>" +
                 "</smil>";
             Map<String,String> l_mapParam = new HashMap<>();
-            l_mapParam.put("t04.txt", "中国移动·通信开放平台");
-            l_mapParam.put("12.jpeg", "http://sms-agent.b0.upaiyun.com/sms_agent_temp/1/5857b368887d4.jpeg");
+            l_mapParam.put("t04.txt", "信息推送");
+            //l_mapParam.put("t05.txt", "复制上述卡密，直接粘贴回复，即可进行充值。流量充值结果预计在1小时内以短信方式告知，敬请留意。若遇充值不成功或其他问题，请致电4007000075查询处理。");
+            //l_mapParam.put("t06.txt", "更多充值优惠，可关注公众号微信钱包君（搜索微信号liuliangqbj），或保存下面二维码，微信扫一扫即可成功关注。");
+            //l_mapParam.put("13.jpg", "http://sms-agent.b0.upaiyun.com/sms_agent_temp/1/58635adb79e31.jpg");
+            //l_mapParam.put("12.mp4", "http://sms-agent.b0.upaiyun.com/sms_agent_temp/1/5858d9f0bdfad.mp4");
 
-            createMMS.create ("kbscp3.mms", "三体科技", l_strXml, l_mapParam, null);
+            l_mapParam.put("12.mp4", "http://file.cdn.xiaohongquan.cn/20170113/b74e6572d72fb4b78ce69e2a43611e76.mp4");
+            //l_mapParam.put("11.jpg", "http://sms-agent.b0.upaiyun.com/sms_agent_temp/1/585b436f90add.jpg");
+            //l_mapParam.put("12.jpg", "http://sms-agent.b0.upaiyun.com/sms_agent_temp/1/585b436f90add.jpg");
+
+            //l_mapParam.put("12.mp4", "http://sms-agent.b0.upaiyun.com/sms_agent_temp/1/5858d9f0bdfad.mp4");
+
+            createMMS.create ("xinwen.mms", "信息推送", l_strXml, l_mapParam, "");
         } catch (Exception e) {
             System.out.println(e.getMessage());
         }
