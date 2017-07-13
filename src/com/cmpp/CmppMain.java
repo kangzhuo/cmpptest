@@ -37,7 +37,11 @@ public class CmppMain {
             Thread.sleep(100);
         }
 
-        return CmppSocketClient.sendAndRetSocket(cmppPackData.makeCmppSubmitReq(l_iSeq, p_strTel, p_iType, p_strMsg));
+        if (1 == p_iType || 2 == p_iType || 3 == p_iType) {
+            CmppSocketClient.sendAndRetSocket(cmppPackData.makeCmppSubmitReq(l_iSeq, p_strTel, p_iType, p_strMsg));
+        } else {
+            CmppSocketClient.sendAndRetSocket(cmppPackData.makeCmppSubmitReq(l_iSeq, p_strTel, p_iType, p_strMsg));
+        }
     }
 
     //获取短信提交状态反馈接口，数据异步返回，通过dealSmsReport方法中添加代码处理回馈
