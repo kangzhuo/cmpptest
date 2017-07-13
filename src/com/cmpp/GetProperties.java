@@ -8,18 +8,19 @@ import java.util.Properties;
 /**
  * Created by kangbo on 2016/11/29.
  */
+
 class GetProperties {
-    String host = "211.140.12.45";
-    String port = "7890";
+    String host = "220.201.8.97";
+    String port = "9001";
     int maxSocket = 2;
     int timeOut = 1;
     int sendRetry = 3;
     int recvRetry = 10;
     int winSize = 10;
 
-    String sourceAddr = "QQ1107";
-    String spId = "911337";
-    String pwd = "rgr61107";
+    String sourceAddr = "shpwsy2hy";
+    String spId = "246058";
+    String pwd = "shpwsy2hy";
     byte version = (byte)0x30;
     byte registeredDelivery = (byte)0x01;
     byte msgLevel = (byte)0x01;
@@ -28,7 +29,7 @@ class GetProperties {
     String feeCode = "000";
     byte[] validTime = {(byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00};
     byte[] atTime = {(byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00};
-    String srcId = "106575261107666";
+    String srcId = "1065502400168802";
     byte[] reserve = {(byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00};
 
     //0000005eh: 31 30 36 35 37 35 32 36 31 31 30 37             ; ............

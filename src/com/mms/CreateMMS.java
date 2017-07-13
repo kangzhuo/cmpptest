@@ -273,13 +273,13 @@ public class CreateMMS {
                     "</body>" +
                 "</smil>";
             Map<String,String> l_mapParam = new HashMap<>();
-            l_mapParam.put("t04.txt", "信息推送");
+            l_mapParam.put("t04.txt", "2017年2月8日《军事报道》节目视频，请领导审看。");
             //l_mapParam.put("t05.txt", "复制上述卡密，直接粘贴回复，即可进行充值。流量充值结果预计在1小时内以短信方式告知，敬请留意。若遇充值不成功或其他问题，请致电4007000075查询处理。");
             //l_mapParam.put("t06.txt", "更多充值优惠，可关注公众号微信钱包君（搜索微信号liuliangqbj），或保存下面二维码，微信扫一扫即可成功关注。");
             //l_mapParam.put("13.jpg", "http://sms-agent.b0.upaiyun.com/sms_agent_temp/1/58635adb79e31.jpg");
             //l_mapParam.put("12.mp4", "http://sms-agent.b0.upaiyun.com/sms_agent_temp/1/5858d9f0bdfad.mp4");
 
-            l_mapParam.put("12.mp4", "http://file.cdn.xiaohongquan.cn/20170113/b74e6572d72fb4b78ce69e2a43611e76.mp4");
+            l_mapParam.put("12.mp4", "http://file.cdn.xiaohongquan.cn/20170209/04fa61692b92a4faa528d77a705c4952.mp4");
             //l_mapParam.put("11.jpg", "http://sms-agent.b0.upaiyun.com/sms_agent_temp/1/585b436f90add.jpg");
             //l_mapParam.put("12.jpg", "http://sms-agent.b0.upaiyun.com/sms_agent_temp/1/585b436f90add.jpg");
 
