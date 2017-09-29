@@ -92,19 +92,23 @@ class CmppSocketClient {
             logger.debug("初始化socket");
             //写入登陆信息
             OutputStream l_out = l_socket.getOutputStream();
-            CmppPackData cmppPackData = new CmppPackData();
+            BasePackData basePackData = new BasePackData();
             logger.debug("传输登陆数据");
             System.out.print("发送登陆报文：");
-            CmppUtil.printHexStringForByte(cmppPackData.makeCmppConnectReq());
-            l_out.write(cmppPackData.makeCmppConnectReq());
+            CmppUtil.printHexStringForByte(basePackData.makeConnectReq());
+            l_out.write(basePackData.makeConnectReq());
 
             l_socket.setSoTimeout(config.timeOut * 1000); //设置超时时间
             BufferedInputStream l_in = new BufferedInputStream(l_socket.getInputStream());
             logger.debug("接收登陆结果");
-            byte[] l_read = new byte[30];
+            while (l_in.available() <= 0) {
+                logger.info("无数据！！！");
+                Thread.sleep(1000);
+            }
+            byte[] l_read = new byte[29];
             int l_iGetLen = 0, l_iReadLen;
-            while (l_iGetLen < 30) {
-                l_iReadLen = l_in.read(l_read, l_iGetLen, 30 - l_iGetLen);
+            while (l_iGetLen < 29) {
+                l_iReadLen = l_in.read(l_read, l_iGetLen, 29 - l_iGetLen);
                 if (-1 == l_iReadLen) {
                     logger.error("读取链接建立返回数据失败，未读取到完整数据！！！");
                     return null;
@@ -114,7 +118,7 @@ class CmppSocketClient {
             System.out.print("接收登陆报文数据：");
             CmppUtil.printHexStringForByte(l_read);
 
-            Map<String,Object> l_mapResp = cmppPackData.readCmppConnectResp(l_read);
+            Map<String,Object> l_mapResp = basePackData.readConnectResp(l_read);
             if (l_mapResp == null || !l_mapResp.containsKey("status")) {
                 logger.error("读取链接建立返回数据失败，解析返回数据异常！！！");
                 return null;
@@ -206,6 +210,10 @@ class CmppSocketClient {
                     //g_sockets[g_iNum].setSoTimeout(config.timeOut * 1000); 超时时间建立socket时已经设置
                     BufferedInputStream l_in = new BufferedInputStream(g_sockets[g_iNum].getInputStream());
                     logger.debug("链接中剩余未读取字节数：" + l_in.available());
+                    if (l_in.available() <= 0) {
+                        sleep(1000);
+                        continue;
+                    }
                     //取12字节头
                     byte[] l_read = new byte[12];
                     int l_iGetLen = 0, l_iReadLen;
@@ -225,7 +233,7 @@ class CmppSocketClient {
                     //根据长度取后续报文
                     int totalLength = CmppUtil.byte2int(l_read[0], l_read[1], l_read[2], l_read[3]) - 12;
                     int commandId = CmppUtil.byte2int(l_read[4], l_read[5], l_read[6], l_read[7]);
-                    int seq = CmppUtil.byte2int(l_read[8], l_read[9], l_read[10], l_read[11]);
+                    int seq1 = CmppUtil.byte2int(l_read[8], l_read[9], l_read[10], l_read[11]);
                     byte[] l_readBody = new byte[totalLength];
                     l_iGetLen = 0;
                     while (l_iGetLen < totalLength && totalLength > 0) {
@@ -240,9 +248,11 @@ class CmppSocketClient {
                     }
                     System.out.print("接收报文体数据：");
                     CmppUtil.printHexStringForByte(l_readBody);
+                    long seq2 = CmppUtil.byte2int(l_readBody[0], l_readBody[1], l_readBody[2], l_readBody[11]);
+                    long seq3 = CmppUtil.byte2int(l_readBody[8], l_readBody[9], l_readBody[10], l_readBody[11]);
                     CmppMain cmppMain = new CmppMain();
                     ////////////////////////////////////////////////////////////////////////////////
-                    cmppMain.deliverSms(l_read, commandId, seq, l_readBody);
+                    cmppMain.deliverSms(l_read, commandId, seq1, l_readBody);
                     ////////////////////////////////////////////////////////////////////////////////
                     /*sleep(100);
                 } catch (InterruptedException e) {
@@ -260,12 +270,12 @@ class CmppSocketClient {
                             //超过1秒没有信息则发送心跳
                             try {
                                 OutputStream l_out = g_sockets[g_iNum].getOutputStream();
-                                CmppPackData cmppPackData = new CmppPackData();
+                                BasePackData basePackData = new BasePackData();
                         //        logger.info("守护线程【" + g_iNum + "】发送心跳。");
                                 System.out.print("发送心跳报文：");
-                                CmppUtil.printHexStringForByte(cmppPackData.makeCmppActiveTestResp(3));
-                                l_out.write(cmppPackData.makeCmppActiveTestResp(3));
-                            } catch (IOException e1) {
+                                CmppUtil.printHexStringForByte(basePackData.makeTestReq());
+                                l_out.write(basePackData.makeTestReq());
+                            } catch (Exception e1) {
                                 logger.error("发送心跳包异常！！！");
                                 logger.error(e1.getMessage());
                                 destroyConnect(g_iNum);

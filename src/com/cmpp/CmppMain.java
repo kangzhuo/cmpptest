@@ -29,6 +29,7 @@ public class CmppMain {
     //对外提供发送短信接口，发送状态异步返回，通过dealDeliver方法中添加代码处理状态回执
     public int submitSms(String p_strDoneCode, String p_strTel, String p_strMsg, int p_iType) throws Exception {
         CmppPackData cmppPackData = new CmppPackData();
+        SGIPPackData sgipPackData = new SGIPPackData();
         int l_iSeq = getSeq();
         CmppMain.g_mapSeq.put(l_iSeq, p_strDoneCode);
 
@@ -38,9 +39,9 @@ public class CmppMain {
         }
 
         if (1 == p_iType || 2 == p_iType || 3 == p_iType) {
-            CmppSocketClient.sendAndRetSocket(cmppPackData.makeCmppSubmitReq(l_iSeq, p_strTel, p_iType, p_strMsg));
+            return CmppSocketClient.sendAndRetSocket(cmppPackData.makeCmppSubmitReq(l_iSeq, p_strTel, p_iType, p_strMsg));
         } else {
-            CmppSocketClient.sendAndRetSocket(cmppPackData.makeCmppSubmitReq(l_iSeq, p_strTel, p_iType, p_strMsg));
+            return CmppSocketClient.sendAndRetSocket(sgipPackData.makeSGIPSubmitReq(l_iSeq, p_strTel, p_iType, p_strMsg));
         }
     }
 

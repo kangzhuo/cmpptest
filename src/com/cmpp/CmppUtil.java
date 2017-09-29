@@ -1,5 +1,6 @@
 package com.cmpp;
 
+import java.nio.ByteBuffer;
 import java.security.MessageDigest;
 import java.util.ArrayList;
 import java.util.List;
@@ -115,5 +116,18 @@ class CmppUtil {
         }
 
         return l_ret;
+    }
+
+    static byte[] long2byte(long p_iRes) {
+        ByteBuffer buffer = ByteBuffer.allocate(8);
+        buffer.putLong(0, p_iRes);
+        return buffer.array();
+    }
+
+    public static long bytesToLong(byte[] bytes) {
+        ByteBuffer buffer = ByteBuffer.allocate(8);
+        buffer.put(bytes, 0, bytes.length);
+        buffer.flip();//need flip
+        return buffer.getLong();
     }
 }

@@ -19,19 +19,21 @@ class GetProperties {
     int winSize = 10;
 
     String sourceAddr = "shpwsy2hy";
-    String spId = "246058";
+    String spId = "31971";
     String pwd = "shpwsy2hy";
     byte version = (byte)0x30;
     byte registeredDelivery = (byte)0x01;
     byte msgLevel = (byte)0x01;
     byte feeUserType = (byte)0x03;
     String feeType = "01";
-    String feeCode = "000";
+    String feeCode = "000000";
     byte[] validTime = {(byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00};
     byte[] atTime = {(byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00};
-    String srcId = "1065502400168802";
+    String srcId = "106550240016001";
     byte[] reserve = {(byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00};
+    String serviceType = "9991900562";
 
+    String protocol = "LT";
     //0000005eh: 31 30 36 35 37 35 32 36 31 31 30 37             ; ............
     //self.Timestamp=0
     //self.Pk_total=1            #信息总条数
@@ -88,6 +90,10 @@ class GetProperties {
                     srcId = prop.getProperty("srcId");
                 //if(prop.containsKey("reserve"))
                 //    reserve = prop.getProperty("reserve").getBytes();
+                if(prop.containsKey("protocol"))
+                    protocol = prop.getProperty("protocol");
+                if(prop.containsKey("serviceType"))
+                    serviceType = prop.getProperty("serviceType");
                 in.close();
 
                 /* //保存属性到b.properties文件
